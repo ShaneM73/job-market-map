@@ -182,7 +182,7 @@
     $('reset').addEventListener('click', () => { view.rot = 0; view.tilt = 0.8; zoomT = d3.zoomIdentity; render(); });
     $('hublist').innerHTML = D.hubs.map(h => `<li data-h="${esc(h.hub)}"><span class="r">${esc(h.rank)}</span><span class="h">${esc(h.hub)}</span>, ${esc(h.state)}<span class="s">${esc(h.summary)}</span></li>`).join('');
     $('hublist').querySelectorAll('li').forEach(li => li.addEventListener('click', () => { focusHub = focusHub === li.dataset.h ? null : li.dataset.h; layer = 'geo'; chapter = null; $('show-hubs').checked = true; sync(); }));
-    const src = new Set(st.map(r => r.source)); $('foot').innerHTML = `Sources: ${Array.from(src).map(esc).join('; ')}; BLS Metropolitan Area Employment (Aug 2026); BLS OEWS May 2023 metro tables (cartographers & photogrammetrists, SOC 17-1021); Apartment List rents (Oct 2026); NAR/HSH home prices (Q1 2026); and the research report "Geospatial job market geography 2026" (Oct 24, 2026). The state layers refresh monthly from the BLS public API via GitHub Actions; the hub ranking is editorial and updated by hand. Not career or investment advice.`;
+    const src = new Set(st.map(r => r.source)); $('foot').innerHTML = `Sources: ${Array.from(src).map(esc).join('; ')}; BLS Metropolitan Area Employment (Aug 2026); BLS OEWS May 2023 metro tables (cartographers & photogrammetrists, SOC 17-1021); terrain base from Natural Earth 1:50m shaded relief and hypsometric tint (public domain); Apartment List rents (Oct 2026); NAR/HSH home prices (Q1 2026); and the research report "Geospatial job market geography 2026" (Oct 24, 2026). The state layers refresh monthly from the BLS public API via GitHub Actions; the hub ranking is editorial and updated by hand. Not career or investment advice.`;
     window.addEventListener('resize', () => { render(); charts(); });
     sync(); charts();
   }
@@ -220,14 +220,8 @@
     else if (L.kind === 'div') { const m = d3.max(vals, v => Math.abs(v)) || 1; hScale = d3.scaleLinear([0, m], [0, 90]); const up = d3.interpolateRgb(grey, ok), dn = d3.interpolateRgb(grey, bad); const sgn = L.invert ? -1 : 1; color = v => isNaN(v) ? grey : (v * sgn >= 0 ? up(Math.min(1, Math.abs(v) / m)) : dn(Math.min(1, Math.abs(v) / m))); lgLo = L.fmt(-m); lgHi = L.fmt(m); $('lg-bar').style.background = L.invert ? `linear-gradient(90deg, ${ok}, ${grey}, ${bad})` : `linear-gradient(90deg, ${bad}, ${grey}, ${ok})`; }
     else if (L.kind === 'moves') { hScale = () => 0; color = () => grey; /* relief set below */ lgLo = 'Origin (Washington)'; lgHi = 'Destination ▶'; $('lg-bar').style.background = `linear-gradient(90deg, ${d3.interpolateRgb(accent, '#ffffff')(0.55)}, ${accent})`; }
     else { hScale = () => 0; color = () => grey; lgLo = 'Hub score 50'; lgHi = '100'; $('lg-bar').style.background = `linear-gradient(90deg, ${grey}, ${accent})`; }
-    let relief = null;
-    if (L.kind === 'hubs' || L.kind === 'moves') { // neutral relief: unemployment rate shapes the surface under the markers
-      const ur = D.states.map(r => num(r.unemployment_rate)).filter(v => !isNaN(v)); const [lo, hi] = d3.extent(ur);
-      const rh = d3.scaleLinear([lo, hi], [6, 70]); const rc = d3.interpolateRgb(css('--panel'), grey);
-      relief = { h: v => isNaN(v) ? 0 : Math.round(rh(v)), c: v => isNaN(v) ? grey : rc(0.25 + 0.75 * (v - lo) / (hi - lo)) };
-      $('lg-note').textContent = '· ' + L.note + ` · base relief: unemployment rate ${f1(lo)}–${f1(hi)}% (lighter and lower = tighter labor market)`;
-    }
-    $('lg-lo').textContent = lgLo; $('lg-hi').textContent = lgHi; if (!relief) $('lg-note').textContent = '· ' + L.note;
+    const terrain = (L.kind === 'hubs' || L.kind === 'moves'); // chapters 4–5 sit on a shaded-relief terrain base
+    $('lg-lo').textContent = lgLo; $('lg-hi').textContent = lgHi; $('lg-note').textContent = '· ' + L.note + (terrain ? ' · base: Natural Earth shaded relief with hypsometric tint, Albers USA projection' : '');
 
     const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${VW} ${VH}`).style('display', 'block');
     const gView = svg.append('g'); const gStates = gView.append('g'); const gMarks = gView.append('g'); const gLabels = gView.append('g').style('pointer-events', 'none');
@@ -235,13 +229,21 @@
     const plane = () => { const a = view.rot * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), tl = view.tilt; return { a: c, b: s * tl, c: -s, d: c * tl, e: VW / 2 - (c * CX - s * CY), f: VH / 2 + 30 - (s * CX + c * CY) * tl }; };
     const items = D.geo.map(s => { const r = byName.get(s.name); const v = val(r); let h = 0;
       if (L.kind === 'seq') h = isNaN(v) ? 0 : Math.round(hScale(v)); else if (L.kind === 'div') { const sgn = L.invert ? -1 : 1; h = isNaN(v) ? 0 : Math.round(hScale(Math.abs(v))) * (v * sgn >= 0 ? 1 : -1); }
-      let top = color(v); if (relief) { const u = r ? num(r.unemployment_rate) : NaN; h = relief.h(u); top = relief.c(u); }
-      const dc = d3.color(top); return { s, r, v, h, top, side: dc ? dc.darker(h < 0 ? 1.5 : 0.9).formatRgb() : top }; });
+      let top = color(v); if (terrain) { h = 10; top = '#8d8f86'; }
+      const dc = d3.color(top); return { s, r, v, h, top, side: terrain ? '#6f716a' : (dc ? dc.darker(h < 0 ? 1.5 : 0.9).formatRgb() : top) }; });
+    let gBase = null;
+    if (terrain) {
+      gBase = gStates.append('g').attr('class', 'terrain');
+      gBase.append('clipPath').attr('id', 'landclip').attr('clipPathUnits', 'userSpaceOnUse').selectAll('path').data(D.geo).join('path').attr('d', s => s.path);
+      gBase.append('image').attr('href', 'data/relief_albers.jpg').attr('x', 0).attr('y', 0).attr('width', 975).attr('height', 610).attr('preserveAspectRatio', 'none').attr('clip-path', 'url(#landclip)').style('pointer-events', 'none');
+      gBase.append('g').selectAll('path').data(D.geo).join('path').attr('d', s => s.path).attr('fill', 'none').attr('stroke', 'rgba(40,40,40,0.5)').attr('stroke-width', 0.8).attr('stroke-linejoin', 'round').style('pointer-events', 'none');
+    }
     const gs = gStates.selectAll('g.state').data(items, d => d.s.id).join('g').attr('class', 'state');
+    if (gBase) gBase.raise();
     gs.each(function (d) { const g1 = d3.select(this); const ks = []; if (d.h >= 0) { for (let k = Math.max(0, d.h - 1); k >= 0; k -= 2) ks.push(k); } else { for (let k = -1; k > d.h; k -= 2) ks.push(k); }
       let holder = g1; if (d.h < 0) { g1.append('clipPath').attr('id', 'pit-' + d.s.id).attr('clipPathUnits', 'userSpaceOnUse').append('path').attr('class', 'clipbase').attr('d', d.s.path); holder = g1.append('g').attr('clip-path', `url(#pit-${d.s.id})`); }
       holder.selectAll('path.side').data(ks).join('path').attr('class', 'side').attr('d', d.s.path).attr('fill', d.side);
-      holder.append('path').attr('class', 'face').attr('d', d.s.path).attr('fill', d.top).attr('stroke', css('--bg')).attr('stroke-width', 0.7).attr('stroke-linejoin', 'round');
+      holder.append('path').attr('class', 'face').attr('d', d.s.path).attr('fill', terrain ? 'rgba(255,255,255,0.001)' : d.top).attr('stroke', terrain ? 'rgba(40,40,40,0.55)' : css('--bg')).attr('stroke-width', terrain ? 0.8 : 0.7).attr('stroke-linejoin', 'round');
       if (d.h < 0) g1.append('path').attr('class', 'rim').attr('d', d.s.path).attr('fill', 'none').attr('stroke', css('--bg')).attr('stroke-width', 0.7); });
     gs.on('mousemove', (ev, d) => { const rb = box.getBoundingClientRect(); const r = d.r || {};
       showTip(tip, box, ev.clientX - rb.left, ev.clientY - rb.top, `<div class="t">${esc(d.s.name)} · ${esc(r.period ? monthName(r.period) : '')}</div><div>Unemployment <b>${f1(num(r.unemployment_rate))}%</b> <span class="${cls(-num(r.unemployment_change_pts))}">(${(num(r.unemployment_change_pts) > 0 ? '+' : '') + f1(num(r.unemployment_change_pts))} pt vs. year ago)</span></div><div>Jobs, 12 mo: <span class="${cls(num(r.jobs_change_12mo_pct))}">${isNaN(num(r.jobs_change_12mo_pct)) ? 'not significant / pending' : fp(num(r.jobs_change_12mo_pct)) + (r.jobs_change_12mo_thousands !== '' ? ' (' + fk(num(r.jobs_change_12mo_thousands)) + ')' : '')}</span></div>`); })
@@ -250,7 +252,7 @@
     const labels = items.filter(d => { const bb = gs.filter(x => x === d).select('path.face').node().getBBox(); d.bb = bb; return bb.width > 30 && bb.height > 18; })
       .map(d => ({ d, abbr: d.s.abbr, value: (d.bb.width > 46 && d.bb.height > 34 && L.field && !isNaN(d.v)) ? L.fmt(d.v) : '' }));
     const lab = gLabels.selectAll('g').data(labels).join('g');
-    lab.append('text').attr('dy', d => d.value ? '-0.2em' : '0.35em').attr('text-anchor', 'middle').attr('font-size', '10px').attr('font-weight', '600').attr('fill', css('--fg')).text(d => d.abbr);
+    lab.append('text').attr('dy', d => d.value ? '-0.2em' : '0.35em').attr('text-anchor', 'middle').attr('font-size', '10px').attr('font-weight', '600').attr('fill', terrain ? '#222' : css('--fg')).attr('stroke', terrain ? 'rgba(255,255,255,0.8)' : 'none').attr('stroke-width', 2.5).attr('paint-order', 'stroke').text(d => d.abbr);
     lab.filter(d => d.value).append('text').attr('dy', '0.95em').attr('text-anchor', 'middle').attr('font-size', '9px').attr('fill', css('--fg')).attr('fill-opacity', .85).text(d => d.value);
     // markers: hubs (pins whose height = score) and metros (dots)
     const hubsOn = $('show-hubs').checked, metrosOn = $('show-metros').checked;
@@ -268,13 +270,13 @@
     ga.filter(d => !d.cut).append('path').attr('class', 'dash').attr('fill', 'none').attr('stroke', '#fff').attr('stroke-opacity', .55).attr('stroke-width', d => num(d.d.jobs) >= 1000 ? 1.6 : 1).attr('stroke-dasharray', '3 14').attr('stroke-linecap', 'round');
     ga.filter(d => !d.cut).append('circle').attr('class', 'end').attr('r', d => num(d.d.jobs) >= 1000 ? 6 : 4).attr('fill', accent).attr('stroke', '#fff').attr('stroke-width', 1.2);
     ga.filter(d => d.cut).append('circle').attr('class', 'end').attr('r', d => 8 + Math.sqrt(Math.abs(num(d.d.jobs))) / 4).attr('fill', 'none').attr('stroke', bad).attr('stroke-width', 2.5).attr('stroke-dasharray', '4 3');
-    ga.append('text').attr('class', 'al').attr('font-size', '10px').attr('font-weight', '600').attr('fill', css('--fg')).text(d => d.cut ? d.d.move : (d.first ? `${d.d.to}${d.total ? ' · ' + d3.format(',')(d.total) : ''}` : ''));
+    ga.append('text').attr('class', 'al').attr('font-size', '10px').attr('font-weight', '600').attr('fill', '#1b1b1b').attr('stroke', 'rgba(255,255,255,0.85)').attr('stroke-width', 3).attr('paint-order', 'stroke').text(d => d.cut ? d.d.move : (d.first ? `${d.d.to}${d.total ? ' · ' + d3.format(',')(d.total) : ''}` : ''));
     ga.on('click', (ev, d) => { ev.stopPropagation(); selected = (selected && selected.key === 'm' + d.d.move + d.d.to) ? null : { key: 'm' + d.d.move + d.d.to, kind: 'move', d }; drawPanel(); });
     ga.on('mousemove', (ev, d) => { const rb = box.getBoundingClientRect(); showTip(tip, box, ev.clientX - rb.left, ev.clientY - rb.top, `<div class="t">${esc(d.d.move)}</div><div><b>${esc(d.d.from)} → ${esc(d.d.to)}</b>${num(d.d.jobs) ? ` · ${d3.format('+,')(num(d.d.jobs))} jobs` : ''}</div><div>${esc(d.d.note)}</div>`); }).on('mouseleave', () => tip.style.display = 'none');
     const mk = gMarks.selectAll('g.mk').data(marks).join('g').attr('class', 'mk').style('cursor', 'pointer');
     mk.filter(d => d.kind === 'hub').each(function (d) { const g = d3.select(this); g.append('line').attr('class', 'pin').attr('stroke', accent).attr('stroke-width', d.focus ? 3 : 2).attr('stroke-opacity', d.dim ? .35 : .9);
       g.append('circle').attr('class', 'head').attr('r', d.r).attr('fill', accent).attr('fill-opacity', d.dim ? .35 : .95).attr('stroke', '#fff').attr('stroke-width', d.focus ? 2.5 : 1.2);
-      g.append('text').attr('class', 'hl').attr('font-size', d.focus ? '12px' : '10px').attr('font-weight', '600').attr('fill', css('--fg')).attr('fill-opacity', d.dim ? .4 : 1).text(`${d.d.rank}. ${d.d.hub}`); });
+      g.append('text').attr('class', 'hl').attr('font-size', d.focus ? '12px' : '10px').attr('font-weight', '600').attr('fill', '#1b1b1b').attr('stroke', 'rgba(255,255,255,0.85)').attr('stroke-width', 3).attr('paint-order', 'stroke').attr('fill-opacity', d.dim ? .4 : 1).text(`${d.d.rank}. ${d.d.hub}`); });
     mk.filter(d => d.kind === 'metro').each(function (d) { const g = d3.select(this); g.append('circle').attr('class', 'head').attr('r', 4.5).attr('fill', d.good === null ? grey : d.good ? ok : bad).attr('stroke', '#fff').attr('stroke-width', 1.2); });
     mk.on('mousemove', (ev, d) => { const rb = box.getBoundingClientRect();
       const html = d.kind === 'hub' ? `<div class="t">#${esc(d.d.rank)} geospatial hub · score ${esc(d.d.geo_score)}</div><div><b>${esc(d.d.hub)}</b>, ${esc(d.d.state)}</div><div>${esc(d.d.summary)}</div><div style="margin-top:4px"><b>Momentum:</b> ${esc(d.d.momentum)}</div><div><b>Metro jobs 2026:</b> ${esc(d.d.metro_jobs_signal_2026)}</div>${d.d.cartographer_jobs_2023 ? `<div><b>Cartographer jobs / mean wage (May 2023):</b> ${esc(d.d.cartographer_jobs_2023)} / $${d3.format(',')(num(d.d.cartographer_mean_wage_2023))}</div>` : ''}<div><b>Rent (Oct 2026):</b> $${d3.format(',')(num(d.d.rent_oct2026))}${d.d.home_price_to_wage ? ` · <b>home price ÷ wage:</b> ${esc(d.d.home_price_to_wage)}×` : ''}</div>`
@@ -316,6 +318,7 @@
       const m = plane(); const ms = `matrix(${m.a} ${m.b} ${m.c} ${m.d} ${m.e} ${m.f})`;
       const depth = d => Math.sin(view.rot * Math.PI / 180) * d.s.cx + Math.cos(view.rot * Math.PI / 180) * d.s.cy;
       gs.sort((a, b) => depth(a) - depth(b));
+      if (gBase) gBase.attr('transform', `translate(0,-10) ${ms}`);
       gs.selectAll('path.side').attr('transform', k => `translate(0,${-k}) ${ms}`);
       gs.select('path.face').attr('transform', d => `translate(0,${-d.h}) ${ms}`);
       gs.selectAll('path.clipbase, path.rim').attr('transform', ms);

@@ -9,8 +9,9 @@ work concentrates; four short chapters walk through the story.
 **Layers:** unemployment rate · change vs. a year ago · 12-month nonfarm job growth · geospatial hubs · federal reshuffle (arcs)
 **Markers:** hub pins (height = hub score, hover for the case for each), metro dots (job winners/losers)
 **Interaction:** drag to pan, scroll to zoom, Shift+drag (or sliders) to rotate and tilt; click a hub pin or a relocation arrow
-for a standing information card at that spot (close with × or click the map). In chapters 4–5 the base map carries
-relief from the unemployment layer in neutral tones.
+for a standing information card at that spot (close with × or click the map). In chapters 4–5 the base map is a shaded-relief
+terrain plate (Natural Earth 1:50m shaded relief + hypsometric tint, public domain, reprojected to Albers USA; `data/relief_albers.jpg`,
+rebuilt with `scripts/build_relief.py`).
 
 **Report:** the full research report behind the hub ranking is in `report/` (Markdown) and rendered as `report.html`;
 the map page ends with its key findings and two charts (pay after rent by hub; core occupations vs. graduates).
@@ -33,6 +34,7 @@ Or enable GitHub Pages (Settings → Pages → `main`, root). d3 is vendored; th
 | `data/moves.csv` | Federal relocations and cuts drawn as arcs/rings in chapter 5 | By hand |
 | `data/occupations.csv` | BLS OOH counts for the core geospatial occupations and annual graduates | By hand (BLS OOH updates yearly) |
 | `data/states_geo.json` | Simplified state outlines (Albers USA, from us-atlas / Census) | Static |
+| `data/relief_albers.jpg` | Shaded-relief terrain in the same Albers USA frame (Natural Earth, public domain) | Static |
 
 **Setup (one time):** GitHub's runners are bot-blocked by bls.gov, so the script reads the same BLS series through
 FRED's official API. Get a free key at https://fred.stlouisfed.org/docs/api/api_key.html and add it as a repository
