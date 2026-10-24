@@ -1,0 +1,10 @@
+BLS HTTP error: 503 b'<!DOCTYPE HTML>\r\n<html lang="en-us">\t\r\n\t<head>\t\r\n<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\r\n<title>The BLS website is busy</title>\r\n\n<script>(window.BOOMR_mq=window.BOOMR_mq||[]).push(["addVar",{"rua.upush":"false","rua.cpush":"false","rua.upre":"false","rua.cpre":"false"'
+BLS API unreachable or refused; skipping to FRED
+BLS API series with data: 0 of 102
+falling back to FRED for the missing series
+FRED fetch failed: MOUR TimeoutError('The read operation timed out')
+FRED probe MOUR points: 0
+after FRED: 0 of 102
+too little data; leaving states.csv unchanged
+refresh exited 1
+run 2026-10-24T20:49:33Z
