@@ -43,6 +43,11 @@
   .hubs .h { font-weight:600; } .hubs .s { font-size:12px; color:var(--muted); display:block; margin-top:2px; }
   table { width:100%; border-collapse:collapse; font-size:12px; } th { text-align:left; color:var(--muted); font-weight:600; padding:5px 6px 5px 0; border-bottom:1px solid var(--line); white-space:nowrap; } td { padding:5px 6px 5px 0; border-bottom:1px solid var(--line); } td.num, th.num { text-align:right; white-space:nowrap; }
   .foot { font-size:12px; color:var(--muted); margin-top:14px; line-height:1.5; }
+  .findings { display:grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 18px; }
+  .findings h3 { font-size:14px; margin: 6px 0 2px; }
+  .takeaways { display:grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 10px 18px; margin-top: 14px; font-size: 13px; line-height: 1.5; }
+  .takeaways div { border-left: 3px solid var(--accent); padding-left: 10px; }
+  .bar text { font-size: 11px; }
   .foot a { color: inherit; }
 </style>
 </head>
@@ -64,6 +69,7 @@
           <button data-l="uchg">Change vs. year ago</button>
           <button data-l="jobs">Job growth, 12 mo</button>
           <button data-l="geo">Geospatial hubs</button>
+          <button data-l="moves">Federal reshuffle</button>
         </span>
         <label><input type="checkbox" id="show-hubs" checked> hub markers</label>
         <label><input type="checkbox" id="show-metros"> metro markers</label>
@@ -91,6 +97,31 @@
     </div>
   </div>
 
+  <div class="card" style="margin-top:14px">
+    <h2>Key findings from the report</h2>
+    <p class="note">From <a href="report.html" style="color:var(--accent)">Geospatial job market geography 2026</a> (research completed Oct 24, 2026, ~130 cited sources). Figures below are drawn from the same data files as the map.</p>
+    <div class="findings">
+      <div>
+        <h3>Pay after rent, by hub</h3>
+        <p class="note">Cartographer/photogrammetrist mean wage (BLS OEWS, May 2023) minus twelve months of rent (Apartment List, Oct 2026). Dot = home price ÷ wage (lower is more affordable; Q1 2026).</p>
+        <div id="chart-hubs"></div>
+      </div>
+      <div>
+        <h3>Small core occupations, big adjacent pool</h3>
+        <p class="note">Universities award ~7,100 geography/GIS credentials a year against ~1,000 openings in the two "pure" geospatial occupations; most graduates land in surveying, planning, software and especially data science, where programming closes a ~$40k pay gap.</p>
+        <div id="chart-occ"></div>
+      </div>
+    </div>
+    <div class="takeaways">
+      <div><b>The market is stalled, not sinking.</b> Unemployment 4.1–4.3% since March; payrolls +29k in September; quits at 1.9%; wages trailing inflation. Few layoffs, little hiring.</div>
+      <div><b>Growth is Southern, Mountain and suburban.</b> Only 7 states and 9 of 387 metros grew significantly; Texas, the Carolinas, Utah and Louisiana lead; Sunbelt cores are flat while their suburbs grow.</div>
+      <div><b>Washington is the one big loser.</b> −66,000 metro jobs after 2025 federal cuts; DC and Arlington −4.5%. For civil-agency GIS it is the worst large market in the country right now.</div>
+      <div><b>Geospatial work follows federal money.</b> NGA to St. Louis, Space Command and FBI to Huntsville, USDA to five hubs; NOAA/USGS and civil contractors cut; defense-intel stable.</div>
+      <div><b>For a Missouri graduate:</b> St. Louis first (clearance-gated, cheapest housing), then Denver, DC (cleared only), Huntsville, Raleigh, Austin/Houston, Kansas City. Mizzou, UMSL and Northwest Missouri State hold NGA pipelines; Missouri State does not — route in via GeoSTL, GeoFutures events or a TGI-member graduate program.</div>
+      <div><b>What raises pay:</b> Python/SQL/cloud (geospatial data scientist ~$117k vs ~$75k GIS analyst), a clearance (+$119k average total comp), GISP (+24%), surveying licensure (most openings per incumbent).</div>
+    </div>
+  </div>
+
   <p class="foot" id="foot"></p>
 </div>
 
@@ -109,18 +140,20 @@
 
   const D = {};
   const load = (k, f) => fetch('data/' + f).then(r => { if (!r.ok) throw new Error(f + ' ' + r.status); return r.text(); }).then(t => { D[k] = f.endsWith('.json') ? JSON.parse(t) : d3.csvParse(t); });
-  Promise.all([load('geo', 'states_geo.json'), load('states', 'states.csv'), load('hubs', 'hubs.csv'), load('metros', 'metros.csv'), load('nat', 'national.csv')]).then(init).catch(e => { $('lede').textContent = 'Data failed to load: ' + e.message; });
+  Promise.all([load('geo', 'states_geo.json'), load('states', 'states.csv'), load('hubs', 'hubs.csv'), load('metros', 'metros.csv'), load('nat', 'national.csv'), load('moves', 'moves.csv'), load('occ', 'occupations.csv')]).then(init).catch(e => { $('lede').textContent = 'Data failed to load: ' + e.message; });
 
   const LAYERS = {
     unemp: { title: 'Unemployment rate', field: 'unemployment_rate', fmt: v => f1(v) + '%', kind: 'seq', note: 'Height and color = unemployment rate; lower is better' },
     uchg:  { title: 'Change in unemployment vs. a year ago', field: 'unemployment_change_pts', fmt: v => (v > 0 ? '+' : '') + f1(v) + ' pt', kind: 'div', invert: true, note: 'Green = rate fell (sinks below the plane); red = rate rose' },
     jobs:  { title: 'Nonfarm job growth, 12 months', field: 'jobs_change_12mo_pct', fmt: v => fp(v), kind: 'div', note: 'Green rises, red sinks; grey = not statistically significant / not yet loaded' },
     geo:   { title: 'Geospatial hubs', field: null, kind: 'hubs', note: 'States flat and grey; marker height and size = hub score from the research report' },
+    moves: { title: 'Federal reshuffle 2025–26', field: null, kind: 'moves', note: 'Arcs = agency relocations out of Washington (blue); red rings = cuts at civil science agencies' },
   };
   const CHAPTERS = [
     { id: 'c1', label: '1 · A stalled market', layer: 'unemp', hubs: false, text: 'Unemployment has sat between 4.1% and 4.3% since March 2026, yet payrolls grew only 29,000 in September. It is a "low-hire, low-fire" market: few layoffs, but hiring plans at a 15-year low and wages trailing inflation. The Dakotas, New England and the Plains are tightest; DC, California, Michigan and Connecticut loosest.' },
     { id: 'c2', label: '2 · Where jobs grow', layer: 'jobs', hubs: false, metros: true, text: 'Only seven states and nine of 387 metros added jobs at a statistically significant pace over the year: Texas (+154,300), California, North Carolina and Minnesota in numbers; South Carolina, Louisiana and Utah in percent. Houston, Minneapolis, Charlotte, Salt Lake City and Raleigh are the metro winners — the South and Mountain West, and the suburbs more than the cores.' },
     { id: 'c3', label: '3 · Where they shrink', layer: 'uchg', hubs: false, metros: true, text: 'Washington DC is the only jurisdiction in outright decline (−25,800 jobs, −3.5%; the metro −66,000) after 2025 federal workforce cuts, and Portland is the other large loser. Unemployment rose most in Connecticut, Alabama, Hawaii, Oklahoma, Arizona and New Mexico, while Ohio, Pennsylvania and New Jersey improved sharply.' },
+    { id: 'c5', label: '5 · Federal reshuffle', layer: 'moves', hubs: false, text: 'Follow the arcs: NGA\'s 3,150-person campus in St. Louis, Space Command (~1,400 jobs) and 500 FBI posts to Huntsville, and USDA\'s DC workforce shrinking from 4,600 to about 2,000 as it moves to Raleigh, Kansas City, Indianapolis, Fort Collins and Salt Lake City. Meanwhile NOAA lost ~2,000 staff, Interior planned ~1,000 USGS cuts, and Booz Allen called civil work "the most challenging market in a generation" — civil down, defense-intel stable.' },
     { id: 'c4', label: '4 · Geospatial hubs', layer: 'geo', hubs: true, text: 'For geospatial careers the federal reshuffle matters more than the headline: NGA\'s $1.7B St. Louis campus opened in October 2025, Space Command and FBI jobs are moving to Huntsville, USDA is dispersing to Raleigh, Kansas City, Indianapolis, Fort Collins and Salt Lake City, while civil science agencies and DC civil contractors cut. Hover a marker for the case for each hub.' },
   ];
 
@@ -131,7 +164,7 @@
     const byName = new Map(st.map(r => [r.state, r]));
     $('lede').textContent = `State unemployment and job growth through ${monthName(period)} (BLS), national figures from the latest releases, and the ten metros where geospatial work concentrates, drawn from a research review completed October 24, 2026. Raised states and markers are the data; rotate, tilt and zoom the map to read it from any angle.`;
     $('tiles').innerHTML = nat.map(r => `<div class="tile"><div class="l">${esc(r.metric)}</div><div class="v">${esc(r.value)}<span style="font-size:14px;color:var(--muted)"> ${esc(r.unit)}</span></div><div class="n">${esc(r.asof)} · ${esc(r.note)}</div></div>`).join('');
-    $('chapters').innerHTML = CHAPTERS.map(c => `<button data-c="${c.id}" class="${c.id === chapter ? 'on' : ''}">${esc(c.label)}</button>`).join('');
+    $('chapters').innerHTML = CHAPTERS.slice().sort((a, b) => a.id.localeCompare(b.id)).map(c => `<button data-c="${c.id}" class="${c.id === chapter ? 'on' : ''}">${esc(c.label)}</button>`).join('');
     $('chapters').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { const c = CHAPTERS.find(x => x.id === b.dataset.c); chapter = c.id; layer = c.layer; $('show-hubs').checked = !!c.hubs; $('show-metros').checked = !!c.metros; sync(); }));
     $('layer-seg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { layer = b.dataset.l; chapter = null; sync(); }));
     ['show-hubs', 'show-metros'].forEach(id => $(id).addEventListener('change', render));
@@ -141,8 +174,8 @@
     $('hublist').innerHTML = D.hubs.map(h => `<li data-h="${esc(h.hub)}"><span class="r">${esc(h.rank)}</span><span class="h">${esc(h.hub)}</span>, ${esc(h.state)}<span class="s">${esc(h.summary)}</span></li>`).join('');
     $('hublist').querySelectorAll('li').forEach(li => li.addEventListener('click', () => { focusHub = focusHub === li.dataset.h ? null : li.dataset.h; layer = 'geo'; chapter = null; $('show-hubs').checked = true; sync(); }));
     const src = new Set(st.map(r => r.source)); $('foot').innerHTML = `Sources: ${Array.from(src).map(esc).join('; ')}; BLS Metropolitan Area Employment (Aug 2026); BLS OEWS May 2023 metro tables (cartographers & photogrammetrists, SOC 17-1021); Apartment List rents (Oct 2026); NAR/HSH home prices (Q1 2026); and the research report "Geospatial job market geography 2026" (Oct 24, 2026). The state layers refresh monthly from the BLS public API via GitHub Actions; the hub ranking is editorial and updated by hand. Not career or investment advice.`;
-    window.addEventListener('resize', () => render());
-    sync();
+    window.addEventListener('resize', () => { render(); charts(); });
+    sync(); charts();
   }
 
   function sync() {
@@ -157,7 +190,7 @@
   function table() {
     const L = LAYERS[layer]; const st = D.states.slice();
     const field = L.field || 'unemployment_rate';
-    const rows = st.filter(r => !isNaN(num(r[field]))).sort((a, b) => (L.kind === 'seq' ? num(a[field]) - num(b[field]) : num(b[field]) - num(a[field])));
+    const rows = st.filter(r => !isNaN(num(r[field]))).sort((a, b) => (!L.field || L.kind === 'seq' ? num(a[field]) - num(b[field]) : num(b[field]) - num(a[field])));
     $('tbl-title').textContent = (L.field ? L.title : 'Unemployment rate') + ' — states ranked';
     $('tbl-note').textContent = L.kind === 'seq' ? 'Lowest first.' : L.field ? 'Best first; states without a significant figure are omitted.' : 'Lowest first.';
     $('tbl').querySelector('thead').innerHTML = '<tr><th>#</th><th>State</th><th class="num">Unemp.</th><th class="num">vs yr ago</th><th class="num">Jobs 12 mo</th></tr>';
@@ -175,6 +208,7 @@
     let hScale, color, lgLo, lgHi;
     if (L.kind === 'seq') { const [lo, hi] = d3.extent(vals); hScale = d3.scaleLinear([lo, hi], [4, 90]); const ramp = d3.interpolateRgb(ok, bad); color = v => isNaN(v) ? grey : ramp((v - lo) / (hi - lo)); lgLo = `${f1(lo)}%`; lgHi = `${f1(hi)}%`; $('lg-bar').style.background = `linear-gradient(90deg, ${ok}, ${bad})`; }
     else if (L.kind === 'div') { const m = d3.max(vals, v => Math.abs(v)) || 1; hScale = d3.scaleLinear([0, m], [0, 90]); const up = d3.interpolateRgb(grey, ok), dn = d3.interpolateRgb(grey, bad); const sgn = L.invert ? -1 : 1; color = v => isNaN(v) ? grey : (v * sgn >= 0 ? up(Math.min(1, Math.abs(v) / m)) : dn(Math.min(1, Math.abs(v) / m))); lgLo = L.fmt(-m); lgHi = L.fmt(m); $('lg-bar').style.background = L.invert ? `linear-gradient(90deg, ${ok}, ${grey}, ${bad})` : `linear-gradient(90deg, ${bad}, ${grey}, ${ok})`; }
+    else if (L.kind === 'moves') { hScale = () => 0; color = () => grey; lgLo = 'Relocation'; lgHi = 'Cut'; $('lg-bar').style.background = `linear-gradient(90deg, ${accent}, ${bad})`; }
     else { hScale = () => 0; color = () => grey; lgLo = 'Hub score 50'; lgHi = '100'; $('lg-bar').style.background = `linear-gradient(90deg, ${grey}, ${accent})`; }
     $('lg-lo').textContent = lgLo; $('lg-hi').textContent = lgHi; $('lg-note').textContent = '· ' + L.note;
 
@@ -206,6 +240,15 @@
     const marks = [];
     if (hubsOn) D.hubs.forEach(h => { const p = proj([num(h.lon), num(h.lat)]); if (!p) return; marks.push({ kind: 'hub', x: p[0], y: p[1], base: stateH(h.state), hgt: Math.round((num(h.geo_score) - 40) * 1.6), r: 4 + (num(h.geo_score) - 50) / 8, d: h, focus: focusHub === h.hub, dim: focusHub && focusHub !== h.hub }); });
     if (metrosOn) D.metros.forEach(m => { const p = proj([num(m.lon), num(m.lat)]); if (!p) return; const g = num(m.jobs_change_12mo_pct), n = num(m.jobs_change_12mo); const good = !isNaN(g) ? g > 0 : !isNaN(n) ? n > 0 : null; marks.push({ kind: 'metro', x: p[0], y: p[1], base: stateH(m.state), hgt: 0, r: 4, d: m, good }); });
+    const gArcs = gMarks.append('g'); const arcs = [];
+    if (L.kind === 'moves') { const seen = new Map(); D.moves.forEach(mv => { const a = proj([num(mv.from_lon), num(mv.from_lat)]), b = proj([num(mv.to_lon), num(mv.to_lat)]); if (!a || !b) return; const key = mv.kind + '|' + mv.to; const n = (seen.get(key) || 0); seen.set(key, n + 1);
+      const total = d3.sum(D.moves.filter(x => x.kind === mv.kind && x.to === mv.to), x => num(x.jobs) || 0); arcs.push({ a, b, d: mv, cut: mv.kind === 'cutting', first: n === 0, idx: n, total }); }); }
+    const ga = gArcs.selectAll('g.arc').data(arcs).join('g').attr('class', 'arc').style('cursor', 'pointer');
+    ga.filter(d => !d.cut).append('path').attr('fill', 'none').attr('stroke', accent).attr('stroke-width', d => num(d.d.jobs) >= 1000 ? 3 : 1.8).attr('stroke-opacity', .85).attr('stroke-linecap', 'round');
+    ga.filter(d => !d.cut).append('circle').attr('class', 'end').attr('r', d => num(d.d.jobs) >= 1000 ? 6 : 4).attr('fill', accent).attr('stroke', '#fff').attr('stroke-width', 1.2);
+    ga.filter(d => d.cut).append('circle').attr('class', 'end').attr('r', d => 8 + Math.sqrt(Math.abs(num(d.d.jobs))) / 4).attr('fill', 'none').attr('stroke', bad).attr('stroke-width', 2.5).attr('stroke-dasharray', '4 3');
+    ga.append('text').attr('class', 'al').attr('font-size', '10px').attr('font-weight', '600').attr('fill', css('--fg')).text(d => d.cut ? d.d.move : (d.first ? `${d.d.to}${d.total ? ' · ' + d3.format(',')(d.total) : ''}` : ''));
+    ga.on('mousemove', (ev, d) => { const rb = box.getBoundingClientRect(); showTip(tip, box, ev.clientX - rb.left, ev.clientY - rb.top, `<div class="t">${esc(d.d.move)}</div><div><b>${esc(d.d.from)} → ${esc(d.d.to)}</b>${num(d.d.jobs) ? ` · ${d3.format('+,')(num(d.d.jobs))} jobs` : ''}</div><div>${esc(d.d.note)}</div>`); }).on('mouseleave', () => tip.style.display = 'none');
     const mk = gMarks.selectAll('g.mk').data(marks).join('g').attr('class', 'mk').style('cursor', 'pointer');
     mk.filter(d => d.kind === 'hub').each(function (d) { const g = d3.select(this); g.append('line').attr('class', 'pin').attr('stroke', accent).attr('stroke-width', d.focus ? 3 : 2).attr('stroke-opacity', d.dim ? .35 : .9);
       g.append('circle').attr('class', 'head').attr('r', d.r).attr('fill', accent).attr('fill-opacity', d.dim ? .35 : .95).attr('stroke', '#fff').attr('stroke-width', d.focus ? 2.5 : 1.2);
@@ -232,6 +275,11 @@
         g.select('line.pin').attr('x1', x0).attr('y1', y0).attr('x2', x1).attr('y2', y1);
         g.select('circle.head').attr('cx', x1).attr('cy', y1);
         g.select('text.hl').attr('x', x1 + d.r + 3).attr('y', y1 + 3); });
+      ga.each(function (d) { const g = d3.select(this); const [ax, ay] = P(d.a[0], d.a[1], 0), [bx, by] = P(d.b[0], d.b[1], 0);
+        const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1; const lift = Math.min(140, len * 0.35); const mx = (ax + bx) / 2 - dy / len * 0, my = (ay + by) / 2 - lift;
+        g.select('path').attr('d', `M${ax},${ay} Q${mx},${my} ${bx},${by}`);
+        g.select('circle.end').attr('cx', bx).attr('cy', by);
+        g.select('text.al').attr('x', bx + 8).attr('y', by + (d.cut ? (d.d.to === 'Reston' ? 20 : -12) : 4)); });
       $('rot').value = Math.round(view.rot); $('tilt').value = Math.round(view.tilt * 100);
     };
     renderFrame = render2; render2();
@@ -241,6 +289,32 @@
       const mv = e => { view.rot = ((st.rot + (e.clientX - st.x) * 0.5 + 540) % 360) - 180; view.tilt = Math.max(0.25, Math.min(1, st.tilt - (e.clientY - st.y) * 0.004)); render2(); };
       const up = () => { window.removeEventListener('mousemove', mv); window.removeEventListener('mouseup', up); };
       window.addEventListener('mousemove', mv); window.addEventListener('mouseup', up); });
+  }
+  function charts() {
+    const fg = css('--fg'), muted = css('--muted'), accent = css('--accent'), ok = css('--ok'), line = css('--line');
+    // hubs: wage minus rent (bars) + home price / wage (dots)
+    const hb = $('chart-hubs'); hb.innerHTML = '';
+    const rows = D.hubs.filter(h => !isNaN(num(h.cartographer_mean_wage_2023))).map(h => ({ hub: h.hub, net: num(h.cartographer_mean_wage_2023) - 12 * num(h.rent_oct2026), ratio: num(h.home_price_to_wage) })).sort((a, b) => b.net - a.net);
+    const W = hb.clientWidth || 500, rh = 26, m = { top: 18, right: 70, bottom: 22, left: 150 }; const H = m.top + m.bottom + rows.length * rh;
+    const svg = d3.select(hb).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const x = d3.scaleLinear([0, d3.max(rows, r => r.net)], [m.left, W - m.right]); const y = d3.scaleBand(rows.map(r => r.hub), [m.top, H - m.bottom]).padding(.3);
+    const x2 = d3.scaleLinear([0, 12], [m.left, W - m.right]);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('class', 'bar').attr('x', m.left).attr('y', r => y(r.hub)).attr('width', r => x(r.net) - m.left).attr('height', y.bandwidth()).attr('rx', 3).attr('fill', accent).attr('fill-opacity', .75);
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', m.left - 6).attr('y', r => y(r.hub) + y.bandwidth() / 2).attr('dy', '.35em').attr('text-anchor', 'end').attr('font-size', 11).attr('fill', fg).text(r => r.hub);
+    svg.append('g').selectAll('text.v').data(rows).join('text').attr('x', r => x(r.net) + 4).attr('y', r => y(r.hub) + y.bandwidth() / 2).attr('dy', '.35em').attr('font-size', 10).attr('fill', muted).text(r => '$' + d3.format(',.0f')(r.net / 1000) + 'k');
+    svg.append('g').selectAll('circle').data(rows.filter(r => !isNaN(r.ratio))).join('circle').attr('cx', r => x2(r.ratio)).attr('cy', r => y(r.hub) + y.bandwidth() / 2).attr('r', 5).attr('fill', ok).attr('stroke', '#fff').attr('stroke-width', 1.2);
+    svg.append('g').selectAll('text.r').data(rows.filter(r => !isNaN(r.ratio))).join('text').attr('x', r => x2(r.ratio)).attr('y', r => y(r.hub) - 1).attr('text-anchor', 'middle').attr('font-size', 9).attr('fill', ok).text(r => r.ratio + '×');
+    svg.append('text').attr('x', m.left).attr('y', 11).attr('font-size', 10).attr('fill', muted).text('Bar: wage minus 12 months rent · dot: home price ÷ wage (scale 0–12×)');
+    // occupations: log-scale bars
+    const ob = $('chart-occ'); ob.innerHTML = '';
+    const occ = D.occ.map(o => ({ item: o.item, v: num(o.value), note: o.note, grads: /credential/i.test(o.item) })).sort((a, b) => b.v - a.v);
+    const W2 = ob.clientWidth || 500, H2 = m.top + m.bottom + occ.length * 30; const m2 = { top: 18, right: 60, bottom: 22, left: 190 };
+    const s2 = d3.select(ob).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W2} ${H2}`);
+    const xl = d3.scaleLog([1000, 400000], [m2.left, W2 - m2.right]); const y2 = d3.scaleBand(occ.map(o => o.item), [m2.top, H2 - m2.bottom]).padding(.3);
+    s2.append('g').selectAll('rect').data(occ).join('rect').attr('x', m2.left).attr('y', o => y2(o.item)).attr('width', o => xl(o.v) - m2.left).attr('height', y2.bandwidth()).attr('rx', 3).attr('fill', o => o.grads ? ok : accent).attr('fill-opacity', .75);
+    s2.append('g').selectAll('text').data(occ).join('text').attr('x', m2.left - 6).attr('y', o => y2(o.item) + y2.bandwidth() / 2).attr('dy', '.35em').attr('text-anchor', 'end').attr('font-size', 10).attr('fill', fg).each(function (o) { const t = o.item.length > 30 ? o.item.replace(' (2024)', '').replace('Geography & cartography credentials awarded', 'Geography/GIS graduates, per year') : o.item; d3.select(this).text(t); });
+    s2.append('g').selectAll('text.v').data(occ).join('text').attr('x', o => xl(o.v) + 4).attr('y', o => y2(o.item) + y2.bandwidth() / 2).attr('dy', '.35em').attr('font-size', 10).attr('fill', muted).text(o => d3.format(',')(o.v));
+    s2.append('text').attr('x', m2.left).attr('y', 11).attr('font-size', 10).attr('fill', muted).text('Log scale · blue: US jobs (BLS OOH, 2025) · green: credentials awarded per year');
   }
   function showTip(tip, box, x, y, html) { tip.innerHTML = html; tip.style.display = 'block'; const r = box.getBoundingClientRect(); const w = tip.offsetWidth, h = tip.offsetHeight; let left = x + 12, top = y + 12; if (left + w > r.width) left = Math.max(0, x - w - 12); if (top + h > r.height) top = Math.max(0, y - h - 12); tip.style.left = left + 'px'; tip.style.top = top + 'px'; }
 })();

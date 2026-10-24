@@ -4,9 +4,12 @@ A single-page, data-driven 3-D map of the US labor market, built for geospatial-
 professionals. States rise and sink with the chosen measure; pins mark the ten metros where geospatial
 work concentrates; four short chapters walk through the story.
 
-**Layers:** unemployment rate · change vs. a year ago · 12-month nonfarm job growth · geospatial hubs
+**Layers:** unemployment rate · change vs. a year ago · 12-month nonfarm job growth · geospatial hubs · federal reshuffle (arcs)
 **Markers:** hub pins (height = hub score, hover for the case for each), metro dots (job winners/losers)
 **Interaction:** drag to pan, scroll to zoom, Shift+drag (or sliders) to rotate and tilt; click a hub to focus it.
+
+**Report:** the full research report behind the hub ranking is in `report/` (Markdown) and rendered as `report.html`;
+the map page ends with its key findings and two charts (pay after rent by hub; core occupations vs. graduates).
 
 ## Run it
 
@@ -23,6 +26,8 @@ Or enable GitHub Pages (Settings → Pages → `main`, root). d3 is vendored; th
 | `data/national.csv` | Headline tiles (unemployment, payrolls, openings, wages, recent-grad unemployment, metro breadth) | By hand after each jobs report |
 | `data/hubs.csv` | The ten geospatial hubs: rank, score, OEWS cartographer jobs/wage (May 2023), rent (Oct 2026), home-price-to-wage, 2026 job signal, momentum, summary | By hand; editorial, from the research report |
 | `data/metros.csv` | Metro winners/losers from the BLS metro release | By hand after each metro release |
+| `data/moves.csv` | Federal relocations and cuts drawn as arcs/rings in chapter 5 | By hand |
+| `data/occupations.csv` | BLS OOH counts for the core geospatial occupations and annual graduates | By hand (BLS OOH updates yearly) |
 | `data/states_geo.json` | Simplified state outlines (Albers USA, from us-atlas / Census) | Static |
 
 **Setup (one time):** GitHub's runners are bot-blocked by bls.gov, so the script reads the same BLS series through
