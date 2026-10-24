@@ -1,5 +1,7 @@
 # US job market 2026 — 3-D map infographic
 
+**[📄 Read the research report](report/Geospatial-job-market-geography-2026.md)** · live map: enable GitHub Pages (Settings → Pages → `main`, root) and open `https://shanem73.github.io/job-market-map/` — the report is then also at `…/job-market-map/report.html`.
+
 A single-page, data-driven 3-D map of the US labor market, built for geospatial-science students and
 professionals. States rise and sink with the chosen measure; pins mark the ten metros where geospatial
 work concentrates; four short chapters walk through the story.

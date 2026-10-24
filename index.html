@@ -13,6 +13,8 @@
   body { margin:0; background:var(--bg); color:var(--fg); font-family:var(--sans); font-variant-numeric: tabular-nums; }
   .wrap { max-width: 1480px; margin: 0 auto; padding: 16px; }
   h1 { font-family: var(--serif); font-weight: 400; font-size: 30px; margin: 0 0 6px; }
+  .titlebar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; }
+  .links { display:flex; gap:8px; } .btn { text-decoration:none; background:var(--accent); color:#fff; border-radius:999px; padding:7px 14px; font-size:13px; font-weight:600; } .btn.plain { background:var(--panel); color:var(--fg); border:1px solid var(--line); }
   .lede { color: var(--muted); max-width: 70rem; margin: 0 0 14px; line-height: 1.5; }
   .tiles { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; margin-bottom: 14px; }
   .tile { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
@@ -53,7 +55,10 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>US job market, 2026 — a 3-D map</h1>
+  <div class="titlebar">
+    <h1>US job market, 2026 — a 3-D map</h1>
+    <div class="links"><a class="btn" href="report.html">Read the full report →</a><a class="btn plain" href="#findings">Key findings</a></div>
+  </div>
   <p class="lede" id="lede">Loading…</p>
 
   <div class="tiles" id="tiles"></div>
@@ -97,9 +102,9 @@
     </div>
   </div>
 
-  <div class="card" style="margin-top:14px">
+  <div class="card" style="margin-top:14px" id="findings">
     <h2>Key findings from the report</h2>
-    <p class="note">From <a href="report.html" style="color:var(--accent)">Geospatial job market geography 2026</a> (research completed Oct 24, 2026, ~130 cited sources). Figures below are drawn from the same data files as the map.</p>
+    <p class="note">From the report <a href="report.html" style="color:var(--accent);font-weight:600">Geospatial job market geography 2026</a> (research completed Oct 24, 2026, ~130 cited sources; <a href="report/Geospatial-job-market-geography-2026.md" style="color:var(--accent)">Markdown</a>). Figures below are drawn from the same data files as the map.</p>
     <div class="findings">
       <div>
         <h3>Pay after rent, by hub</h3>
