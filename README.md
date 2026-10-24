@@ -8,7 +8,9 @@ work concentrates; four short chapters walk through the story.
 
 **Layers:** unemployment rate · change vs. a year ago · 12-month nonfarm job growth · geospatial hubs · federal reshuffle (arcs)
 **Markers:** hub pins (height = hub score, hover for the case for each), metro dots (job winners/losers)
-**Interaction:** drag to pan, scroll to zoom, Shift+drag (or sliders) to rotate and tilt; click a hub to focus it.
+**Interaction:** drag to pan, scroll to zoom, Shift+drag (or sliders) to rotate and tilt; click a hub pin or a relocation arrow
+for a standing information card at that spot (close with × or click the map). In chapters 4–5 the base map carries
+relief from the unemployment layer in neutral tones.
 
 **Report:** the full research report behind the hub ranking is in `report/` (Markdown) and rendered as `report.html`;
 the map page ends with its key findings and two charts (pay after rent by hub; core occupations vs. graduates).

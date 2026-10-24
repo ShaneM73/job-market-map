@@ -1,11 +1,11 @@
-move,from,from_lat,from_lon,to,to_lat,to_lon,to_state,jobs,kind,note
-NGA West campus,Washington DC,38.90,-77.04,St. Louis,38.63,-90.20,Missouri,3150,growing,"$1.7B Next NGA West opened Oct 8 2025; ~3,150 NGA staff; GeoSTL workforce nonprofit launched Feb 2026"
-Space Command HQ,Colorado Springs,38.83,-104.82,Huntsville,34.73,-86.59,Alabama,1400,growing,"Announced Sep 2 2025; ~1,400 direct jobs over five years, temp facility in 18–24 months"
-FBI relocation,Washington DC,38.90,-77.04,Huntsville,34.73,-86.59,Alabama,500,growing,"500 HQ staff ordered to Redstone Arsenal, Feb 2025; FBI already 2,000+ there"
-USDA hub,Washington DC,38.90,-77.04,Raleigh,35.78,-78.64,North Carolina,,growing,"USDA cutting DC-area staff from 4,600 to ~2,000 and moving to five hubs (July 2025); NRCS aligning to hubs"
-USDA hub,Washington DC,38.90,-77.04,Kansas City,39.10,-94.58,Missouri,,growing,"USDA hub"
-USDA hub,Washington DC,38.90,-77.04,Indianapolis,39.77,-86.16,Indiana,,growing,"USDA hub"
-USDA hub,Washington DC,38.90,-77.04,Fort Collins,40.59,-105.08,Colorado,,growing,"USDA hub; USGS/BLM Lakewood nearby"
-USDA hub,Washington DC,38.90,-77.04,Salt Lake City,40.76,-111.89,Utah,,growing,"USDA hub"
-NOAA cuts,Washington DC,38.90,-77.04,Washington DC,38.90,-77.04,District of Columbia,-2000,cutting,"NOAA lost ~2,000 of 12,000 staff by Mar 2025; 1,000+ more planned"
-USGS cuts,Washington DC,38.90,-77.04,Reston,38.95,-77.36,Virginia,-1000,cutting,"Interior RIF plan ~1,000 USGS positions (May 2025); FY2026 proposal −$562M, Landsat Next restructured"
+move,from,from_state,from_lat,from_lon,to,to_lat,to_lon,to_state,jobs,kind,note
+NGA West campus,Washington DC,District of Columbia,38.90,-77.04,St. Louis,38.63,-90.20,Missouri,3150,growing,"$1.7B Next NGA West opened Oct 8 2025; ~3,150 NGA staff; GeoSTL workforce nonprofit launched Feb 2026"
+Space Command HQ,Colorado Springs,Colorado,38.83,-104.82,Huntsville,34.73,-86.59,Alabama,1400,growing,"Announced Sep 2 2025; ~1,400 direct jobs over five years, temp facility in 18–24 months"
+FBI relocation,Washington DC,District of Columbia,38.90,-77.04,Huntsville,34.73,-86.59,Alabama,500,growing,"500 HQ staff ordered to Redstone Arsenal, Feb 2025; FBI already 2,000+ there"
+USDA hub,Washington DC,District of Columbia,38.90,-77.04,Raleigh,35.78,-78.64,North Carolina,,growing,"USDA cutting DC-area staff from 4,600 to ~2,000 and moving to five hubs (July 2025); NRCS aligning to hubs"
+USDA hub,Washington DC,District of Columbia,38.90,-77.04,Kansas City,39.10,-94.58,Missouri,,growing,USDA hub
+USDA hub,Washington DC,District of Columbia,38.90,-77.04,Indianapolis,39.77,-86.16,Indiana,,growing,USDA hub
+USDA hub,Washington DC,District of Columbia,38.90,-77.04,Fort Collins,40.59,-105.08,Colorado,,growing,USDA hub; USGS/BLM Lakewood nearby
+USDA hub,Washington DC,District of Columbia,38.90,-77.04,Salt Lake City,40.76,-111.89,Utah,,growing,USDA hub
+NOAA cuts,Washington DC,District of Columbia,38.90,-77.04,Washington DC,38.90,-77.04,District of Columbia,-2000,cutting,"NOAA lost ~2,000 of 12,000 staff by Mar 2025; 1,000+ more planned"
+USGS cuts,Washington DC,District of Columbia,38.90,-77.04,Reston,38.95,-77.36,Virginia,-1000,cutting,"Interior RIF plan ~1,000 USGS positions (May 2025); FY2026 proposal −$562M, Landsat Next restructured"
