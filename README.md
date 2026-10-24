@@ -31,7 +31,7 @@ Or enable GitHub Pages (Settings → Pages → `main`, root). d3 is vendored; th
 | `data/national.csv` | Headline tiles (unemployment, payrolls, openings, wages, recent-grad unemployment, metro breadth) | By hand after each jobs report |
 | `data/hubs.csv` | The ten geospatial hubs: rank, score, OEWS cartographer jobs/wage (May 2023), rent (Oct 2026), home-price-to-wage, 2026 job signal, momentum, summary | By hand; editorial, from the research report |
 | `data/metros.csv` | Metro winners/losers from the BLS metro release | By hand after each metro release |
-| `data/moves.csv` | Federal relocations and cuts drawn as arcs/rings in chapter 5 | By hand |
+| `data/moves.csv` | Relocations and cuts drawn as arcs/rings in chapter 5: agency, kind (growing / cutting / commercial), origin and destination, jobs, announcement date, timeline, what, why it matters for geospatial work, source URL | By hand |
 | `data/occupations.csv` | BLS OOH counts for the core geospatial occupations and annual graduates | By hand (BLS OOH updates yearly) |
 | `data/states_geo.json` | Simplified state outlines (Albers USA, from us-atlas / Census) | Static |
 | `data/relief_albers.jpg` | Shaded-relief terrain in the same Albers USA frame (Natural Earth, public domain) | Static |

@@ -50,7 +50,7 @@
   .takeaways { display:grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 10px 18px; margin-top: 14px; font-size: 13px; line-height: 1.5; }
   .takeaways div { border-left: 3px solid var(--accent); padding-left: 10px; }
   .bar text { font-size: 11px; }
-  .panel3d { position: absolute; z-index: 4; width: 250px; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 10px 12px 10px 12px; font-size: 11.5px; line-height: 1.4; box-shadow: 14px 18px 30px rgba(0,0,0,.28), 0 2px 6px rgba(0,0,0,.15); }
+  .panel3d { position: absolute; z-index: 4; width: 290px; max-height: 420px; overflow: auto; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 10px 12px 10px 12px; font-size: 11.5px; line-height: 1.4; box-shadow: 14px 18px 30px rgba(0,0,0,.28), 0 2px 6px rgba(0,0,0,.15); }
   .panel3d .ph { font-weight: 700; font-size: 13px; padding-right: 18px; } .panel3d .pr { margin-top: 3px; } .panel3d .pk { margin-top: 4px; color: var(--muted); } .panel3d .pn { margin-top: 4px; color: var(--muted); }
   .panel3d .pc { all: unset; position: absolute; top: 4px; right: 8px; cursor: pointer; font-size: 16px; color: var(--muted); }
   @media (prefers-reduced-motion: no-preference) { path.dash { animation: flow 1.2s linear infinite; } @keyframes flow { to { stroke-dashoffset: -12; } } }
@@ -156,7 +156,7 @@
     uchg:  { title: 'Change in unemployment vs. a year ago', field: 'unemployment_change_pts', fmt: v => (v > 0 ? '+' : '') + f1(v) + ' pt', kind: 'div', invert: true, note: 'Green = rate fell (sinks below the plane); red = rate rose' },
     jobs:  { title: 'Nonfarm job growth, 12 months', field: 'jobs_change_12mo_pct', fmt: v => fp(v), kind: 'div', note: 'Green rises, red sinks; grey = not statistically significant / not yet loaded' },
     geo:   { title: 'Geospatial hubs', field: null, kind: 'hubs', note: 'States flat and grey; marker height and size = hub score from the research report' },
-    moves: { title: 'Federal reshuffle 2025–26', field: null, kind: 'moves', note: 'Click an arrow or a hub pin for its information panel. Arrows = agency relocations, pale at the origin, solid blue at the destination, thicker for 1,000+ jobs; red dashed rings = cuts at civil science agencies' },
+    moves: { title: 'Federal reshuffle 2025–26', field: null, kind: 'moves', note: 'Click any curve (or a hub pin) for its information panel. Blue arrows = federal relocations, pale at the origin and solid at the destination, thicker for 1,000+ jobs; orange dashed = a commercial HQ move; red dashed rings = cuts' },
   };
   const CHAPTERS = [
     { id: 'c1', label: '1 · A stalled market', layer: 'unemp', hubs: false, text: 'Unemployment has sat between 4.1% and 4.3% since March 2026, yet payrolls grew only 29,000 in September. It is a "low-hire, low-fire" market: few layoffs, but hiring plans at a 15-year low and wages trailing inflation. The Dakotas, New England and the Plains are tightest; DC, California, Michigan and Connecticut loosest.' },
@@ -261,18 +261,21 @@
     if (hubsOn) D.hubs.forEach(h => { const p = proj([num(h.lon), num(h.lat)]); if (!p) return; marks.push({ kind: 'hub', x: p[0], y: p[1], base: stateH(h.state), hgt: Math.round((num(h.geo_score) - 40) * 1.6), r: 4 + (num(h.geo_score) - 50) / 8, d: h, focus: focusHub === h.hub, dim: focusHub && focusHub !== h.hub }); });
     if (metrosOn) D.metros.forEach(m => { const p = proj([num(m.lon), num(m.lat)]); if (!p) return; const g = num(m.jobs_change_12mo_pct), n = num(m.jobs_change_12mo); const good = !isNaN(g) ? g > 0 : !isNaN(n) ? n > 0 : null; marks.push({ kind: 'metro', x: p[0], y: p[1], base: stateH(m.state), hgt: 0, r: 4, d: m, good }); });
     const defs = svg.append('defs'); defs.append('marker').attr('id', 'arrow').attr('viewBox', '0 0 10 10').attr('refX', 9).attr('refY', 5).attr('markerWidth', 7).attr('markerHeight', 7).attr('orient', 'auto-start-reverse').append('path').attr('d', 'M0,0 L10,5 L0,10 z').attr('fill', accent);
+    defs.append('marker').attr('id', 'arrow2').attr('viewBox', '0 0 10 10').attr('refX', 9).attr('refY', 5).attr('markerWidth', 7).attr('markerHeight', 7).attr('orient', 'auto-start-reverse').append('path').attr('d', 'M0,0 L10,5 L0,10 z').attr('fill', '#d9772b');
     const gArcs = gMarks.append('g'); const arcs = [];
     if (L.kind === 'moves') { const seen = new Map(); D.moves.forEach(mv => { const a = proj([num(mv.from_lon), num(mv.from_lat)]), b = proj([num(mv.to_lon), num(mv.to_lat)]); if (!a || !b) return; const key = mv.kind + '|' + mv.to; const n = (seen.get(key) || 0); seen.set(key, n + 1);
-      const total = d3.sum(D.moves.filter(x => x.kind === mv.kind && x.to === mv.to), x => num(x.jobs) || 0); arcs.push({ a, b, d: mv, cut: mv.kind === 'cutting', first: n === 0, idx: n, total, ha: stateH(mv.from_state), hb: stateH(mv.to_state) }); }); }
+      const total = d3.sum(D.moves.filter(x => x.kind === mv.kind && x.to === mv.to), x => num(x.jobs) || 0); const sib = D.moves.filter(x => x.kind !== 'cutting' && x.to === mv.to).length; arcs.push({ a, b, d: mv, cut: mv.kind === 'cutting', com: mv.kind === 'commercial', first: n === 0, idx: n, sib, total, ha: stateH(mv.from_state), hb: stateH(mv.to_state) }); }); }
     const ga = gArcs.selectAll('g.arc').data(arcs).join('g').attr('class', 'arc').style('cursor', 'pointer');
     ga.filter(d => !d.cut).each(function (d, i) { const lg = defs.append('linearGradient').attr('id', 'arcg' + i).attr('gradientUnits', 'userSpaceOnUse'); lg.append('stop').attr('offset', '0%').attr('stop-color', d3.interpolateRgb(accent, '#ffffff')(0.55)); lg.append('stop').attr('offset', '100%').attr('stop-color', accent); d.gid = 'arcg' + i; });
-    ga.filter(d => !d.cut).append('path').attr('class', 'flow').attr('fill', 'none').attr('stroke', d => `url(#${d.gid})`).attr('stroke-width', d => num(d.d.jobs) >= 1000 ? 4.5 : 2.8).attr('stroke-linecap', 'round').attr('marker-end', 'url(#arrow)');
+    const arcCol = d => d.com ? '#d9772b' : accent;
+    ga.filter(d => !d.cut).append('path').attr('class', 'hit').attr('fill', 'none').attr('stroke', 'transparent').attr('stroke-width', 16).style('pointer-events', 'stroke');
+    ga.filter(d => !d.cut).append('path').attr('class', 'flow').attr('fill', 'none').attr('stroke', d => d.com ? arcCol(d) : `url(#${d.gid})`).attr('stroke-width', d => Math.abs(num(d.d.jobs)) >= 1000 ? 4.5 : 2.8).attr('stroke-linecap', 'round').attr('marker-end', d => d.com ? 'url(#arrow2)' : 'url(#arrow)').attr('stroke-dasharray', d => d.com ? '8 5' : null);
     ga.filter(d => !d.cut).append('path').attr('class', 'dash').attr('fill', 'none').attr('stroke', '#fff').attr('stroke-opacity', .55).attr('stroke-width', d => num(d.d.jobs) >= 1000 ? 1.6 : 1).attr('stroke-dasharray', '3 14').attr('stroke-linecap', 'round');
-    ga.filter(d => !d.cut).append('circle').attr('class', 'end').attr('r', d => num(d.d.jobs) >= 1000 ? 6 : 4).attr('fill', accent).attr('stroke', '#fff').attr('stroke-width', 1.2);
+    ga.filter(d => !d.cut).append('circle').attr('class', 'end').attr('r', d => Math.abs(num(d.d.jobs)) >= 1000 ? 6 : 4).attr('fill', arcCol).attr('stroke', '#fff').attr('stroke-width', 1.2);
     ga.filter(d => d.cut).append('circle').attr('class', 'end').attr('r', d => 8 + Math.sqrt(Math.abs(num(d.d.jobs))) / 4).attr('fill', 'none').attr('stroke', bad).attr('stroke-width', 2.5).attr('stroke-dasharray', '4 3');
-    ga.append('text').attr('class', 'al').attr('font-size', '10px').attr('font-weight', '600').attr('fill', '#1b1b1b').attr('stroke', 'rgba(255,255,255,0.85)').attr('stroke-width', 3).attr('paint-order', 'stroke').text(d => d.cut ? d.d.move : (d.first ? `${d.d.to}${d.total ? ' · ' + d3.format(',')(d.total) : ''}` : ''));
+    ga.append('text').attr('class', 'al').attr('font-size', '10px').attr('font-weight', '600').attr('fill', '#1b1b1b').attr('stroke', 'rgba(255,255,255,0.85)').attr('stroke-width', 3).attr('paint-order', 'stroke').text(d => d.cut ? d.d.move : (d.sib > 1 ? `${d.d.to} · ${d.d.move}${num(d.d.jobs) ? ' ' + d3.format(',')(num(d.d.jobs)) : ''}` : `${d.d.to}${num(d.d.jobs) ? ' · ' + d3.format(',')(num(d.d.jobs)) : ''}`));
     ga.on('click', (ev, d) => { ev.stopPropagation(); selected = (selected && selected.key === 'm' + d.d.move + d.d.to) ? null : { key: 'm' + d.d.move + d.d.to, kind: 'move', d }; drawPanel(); });
-    ga.on('mousemove', (ev, d) => { const rb = box.getBoundingClientRect(); showTip(tip, box, ev.clientX - rb.left, ev.clientY - rb.top, `<div class="t">${esc(d.d.move)}</div><div><b>${esc(d.d.from)} → ${esc(d.d.to)}</b>${num(d.d.jobs) ? ` · ${d3.format('+,')(num(d.d.jobs))} jobs` : ''}</div><div>${esc(d.d.note)}</div>`); }).on('mouseleave', () => tip.style.display = 'none');
+    ga.on('mousemove', (ev, d) => { const rb = box.getBoundingClientRect(); showTip(tip, box, ev.clientX - rb.left, ev.clientY - rb.top, `<div class="t">${esc(d.d.agency)}</div><div><b>${esc(d.d.move)}: ${esc(d.d.from)} → ${esc(d.d.to)}</b>${num(d.d.jobs) ? ` · ${d3.format('+,')(num(d.d.jobs))} jobs` : ''}</div><div>${esc(d.d.timeline)}</div><div class="t">Click the curve for the full panel</div>`); }).on('mouseleave', () => tip.style.display = 'none');
     const mk = gMarks.selectAll('g.mk').data(marks).join('g').attr('class', 'mk').style('cursor', 'pointer');
     mk.filter(d => d.kind === 'hub').each(function (d) { const g = d3.select(this); g.append('line').attr('class', 'pin').attr('stroke', accent).attr('stroke-width', d.focus ? 3 : 2).attr('stroke-opacity', d.dim ? .35 : .9);
       g.append('circle').attr('class', 'head').attr('r', d.r).attr('fill', accent).attr('fill-opacity', d.dim ? .35 : .95).attr('stroke', '#fff').attr('stroke-width', d.focus ? 2.5 : 1.2);
@@ -291,8 +294,12 @@
       const s = selected; let html = '', anchor = null;
       if (s.kind === 'move') { const d = s.d.d; const hub = D.hubs.find(h => h.hub === d.to || (d.to === 'Washington DC' && /Washington/.test(h.hub)));
         anchor = arcs.find(a => a.d === d) || s.d;
-        html = `<div class="ph">${esc(d.move)}</div><div class="pr"><b>${esc(d.from)} → ${esc(d.to)}</b>${num(d.jobs) ? ` · <b class="${num(d.jobs) > 0 ? 'up' : 'down'}">${d3.format('+,')(num(d.jobs))} jobs</b>` : ''}</div><div class="pn">${esc(d.note)}</div>` +
-          (hub ? `<div class="pk">Hub #${esc(hub.rank)} · rent $${d3.format(',')(num(hub.rent_oct2026))}/mo${hub.home_price_to_wage ? ` · home ÷ wage ${esc(hub.home_price_to_wage)}×` : ''}</div><div class="pn">${esc(hub.summary)}</div>` : ''); }
+        const others = D.moves.filter(x => x !== d && x.to === d.to && x.kind !== 'cutting');
+        html = `<div class="ph">${esc(d.move)}</div><div class="pk">${esc(d.agency)}${d.announced ? ' · announced ' + esc(d.announced) : ''}</div><div class="pr"><b>${esc(d.from)} → ${esc(d.to)}</b>${num(d.jobs) ? ` · <b class="${num(d.jobs) > 0 ? 'up' : 'down'}">${d3.format('+,')(num(d.jobs))} jobs</b>` : ''}</div>` +
+          `<div class="pn"><b>What:</b> ${esc(d.what)}</div><div class="pn"><b>Timeline:</b> ${esc(d.timeline)}</div><div class="pn"><b>Why it matters for geospatial work:</b> ${esc(d.why)}</div>` +
+          (others.length ? `<div class="pn"><b>Also arriving in ${esc(d.to)}:</b> ${others.map(o => esc(o.move) + (num(o.jobs) ? ` (${d3.format(',')(num(o.jobs))})` : '')).join('; ')}</div>` : '') +
+          (d.source ? `<div class="pn"><a href="${esc(d.source)}" target="_blank" rel="noopener" style="color:var(--accent)">Source ↗</a></div>` : '') +
+          (hub ? `<div class="pk">Geospatial hub #${esc(hub.rank)} · rent $${d3.format(',')(num(hub.rent_oct2026))}/mo${hub.home_price_to_wage ? ` · home ÷ wage ${esc(hub.home_price_to_wage)}×` : ''}</div><div class="pn">${esc(hub.summary)}</div>` : ''); }
       else { const h = s.d.d; anchor = marks.find(m => m.kind === 'hub' && m.d === h) || s.d;
         html = `<div class="ph">#${esc(h.rank)} ${esc(h.hub)}, ${esc(h.state)}</div><div class="pr">Hub score <b>${esc(h.geo_score)}</b>${h.cartographer_jobs_2023 ? ` · ${esc(h.cartographer_jobs_2023)} cartographer jobs, mean $${d3.format(',')(num(h.cartographer_mean_wage_2023))} (May 2023)` : ''}</div><div class="pk">Rent $${d3.format(',')(num(h.rent_oct2026))}/mo${h.home_price_to_wage ? ` · home ÷ wage ${esc(h.home_price_to_wage)}×` : ''} · ${esc(h.metro_jobs_signal_2026)}</div><div class="pn"><b>Momentum:</b> ${esc(h.momentum)}</div><div class="pn">${esc(h.summary)}</div>`; }
       gPanel.append('line').attr('class', 'stem').attr('stroke', accent).attr('stroke-width', 2.5);
@@ -330,12 +337,13 @@
         g.select('line.pin').attr('x1', x0).attr('y1', y0).attr('x2', x1).attr('y2', y1);
         g.select('circle.head').attr('cx', x1).attr('cy', y1);
         g.select('text.hl').attr('x', x1 + d.r + 3).attr('y', y1 + 3); d.px = x1; d.py = y1; });
-      ga.each(function (d) { const g = d3.select(this); const [ax, ay] = P(d.a[0], d.a[1], d.ha), [bx, by] = P(d.b[0], d.b[1], d.hb); d.px = bx; d.py = by;
-        const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1; const lift = Math.min(140, len * 0.35); const mx = (ax + bx) / 2 - dy / len * 0, my = (ay + by) / 2 - lift;
+      ga.each(function (d) { const g = d3.select(this); const [ax, ay] = P(d.a[0], d.a[1], d.ha); let [bx, by] = P(d.b[0], d.b[1], d.hb);
+        const dx0 = bx - ax, dy0 = by - ay, len0 = Math.hypot(dx0, dy0) || 1; const fan = d.sib > 1 ? (d.idx - (d.sib - 1) / 2) * 14 : 0; bx += -dy0 / len0 * fan; by += dx0 / len0 * fan; d.px = bx; d.py = by;
+        const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1; const lift = Math.min(140, len * 0.35) * (1 + (d.sib > 1 ? (d.idx - (d.sib - 1) / 2) * 0.35 : 0)); const mx = (ax + bx) / 2, my = (ay + by) / 2 - lift;
         g.selectAll('path').attr('d', `M${ax},${ay} Q${mx},${my} ${bx},${by}`);
         if (d.gid) svg.select('#' + d.gid).attr('x1', ax).attr('y1', ay).attr('x2', bx).attr('y2', by);
         g.select('circle.end').attr('cx', bx).attr('cy', by);
-        g.select('text.al').attr('x', bx + 8).attr('y', by + (d.cut ? (d.d.to === 'Reston' ? 20 : -12) : 4)); });
+        g.select('text.al').attr('x', bx + 8).attr('y', by + (d.cut ? (d.d.to === 'Reston' ? 20 : d.d.to === 'McLean' ? 34 : -12) : (d.sib > 1 ? 4 + (d.idx - (d.sib - 1) / 2) * 14 : 4))); });
       $('rot').value = Math.round(view.rot); $('tilt').value = Math.round(view.tilt * 100);
       placePanel();
     };
