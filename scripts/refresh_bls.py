@@ -25,9 +25,9 @@ def fetch(series, start, end):
     body = {'seriesid': series, 'startyear': str(start), 'endyear': str(end)}
     if KEY: body['registrationkey'] = KEY
     req = urllib.request.Request(API, data=json.dumps(body).encode(), headers={'Content-Type': 'application/json', 'User-Agent': 'job-market-map refresh'})
-    for i in range(2):
+    for i in range(1):
         try:
-            with urllib.request.urlopen(req, timeout=60) as r:
+            with urllib.request.urlopen(req, timeout=20) as r:
                 raw = r.read()
             d = json.loads(raw)
             if d.get('status') == 'REQUEST_SUCCEEDED':
@@ -71,10 +71,14 @@ def main():
     ids = sorted(fips.values())
     year = time.gmtime().tm_year
     series = {}
+    bls_ok = True
     for prefix, fmt in (('u', 'LASST{}0000000000003'), ('j', 'SMS{}000000000000001')):
         codes = [fmt.format(f) for f in ids]
         for k in range(0, len(codes), 10 if not KEY else 50):
-            for s in fetch(codes[k:k + (10 if not KEY else 50)], year - 1, year):
+            if not bls_ok: break
+            got_batch = fetch(codes[k:k + (10 if not KEY else 50)], year - 1, year)
+            if not got_batch: bls_ok = False; log('BLS API unreachable or refused; skipping to FRED'); break
+            for s in got_batch:
                 pts = {}
                 for o in s.get('data', []):
                     if o['period'].startswith('M') and o['period'] != 'M13':
