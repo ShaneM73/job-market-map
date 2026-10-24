@@ -1,0 +1,7 @@
+metric,value,unit,asof,note,source
+Unemployment rate,4.2,%,2026-09,"Range-bound 4.1–4.3% since March",https://www.bls.gov/news.release/archives/empsit_10022026.htm
+Nonfarm payrolls (Sep),29,thousand,2026-09,"12-month average ~45,000/month; Jul–Aug revised −60,000",https://www.bls.gov/news.release/archives/empsit_10022026.htm
+Job openings,7.1,million,2026-08,"Rate 4.3%; quits 1.9%; layoffs 1.0%",https://www.bls.gov/news.release/archives/jolts_09292026.htm
+Avg hourly earnings growth,3.0,% y/y,2026-09,"Below CPI (+3.4%): real wages falling",https://www.bls.gov/news.release/archives/empsit_10022026.htm
+Recent-grad unemployment,5.6,%,2026-03,"NY Fed; above the national rate",https://news.bloomberglaw.com/new-york-brief/unemployment-for-recent-college-grads-remains-high-ny-fed-says
+Metros with significant job growth,9,of 387,2026-08,"5 fell, 373 unchanged",https://www.bls.gov/news.release/archives/metro_09302026.htm

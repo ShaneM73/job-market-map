@@ -1,0 +1,34 @@
+name: Refresh state data from BLS
+
+on:
+  schedule:
+    # BLS publishes state employment/unemployment around the third Friday-to-Tuesday of each month.
+    # Run on the 22nd and 26th at 18:00 UTC so the new month is picked up soon after release.
+    - cron: '0 18 22,26 * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pull state series from the BLS API
+        env:
+          BLS_API_KEY: ${{ secrets.BLS_API_KEY }}
+        run: python scripts/refresh_bls.py
+      - name: Commit if changed
+        run: |
+          git config user.name "job-market-map-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/states.csv
+          if git diff --cached --quiet; then echo "No change."; exit 0; fi
+          P=$(python -c "import csv;print(next(csv.DictReader(open('data/states.csv')))['period'])")
+          git commit -m "Refresh state data through $P"
+          git push
