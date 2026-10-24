@@ -22,13 +22,16 @@ jobs:
       - name: Pull state series from the BLS API
         env:
           BLS_API_KEY: ${{ secrets.BLS_API_KEY }}
-        run: python scripts/refresh_bls.py
+        run: |
+          python scripts/refresh_bls.py 2> data/refresh_log.txt || echo "refresh exited $?" >> data/refresh_log.txt
+          echo "run $(date -u +%FT%TZ)" >> data/refresh_log.txt
+          tail -n 30 data/refresh_log.txt
       - name: Commit if changed
         run: |
           git config user.name "job-market-map-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/states.csv
+          git add data/states.csv data/refresh_log.txt
           if git diff --cached --quiet; then echo "No change."; exit 0; fi
           P=$(python -c "import csv;print(next(csv.DictReader(open('data/states.csv')))['period'])")
-          git commit -m "Refresh state data through $P"
+          git commit -m "Refresh run: state data through $P"
           git push

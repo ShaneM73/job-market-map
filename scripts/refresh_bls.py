@@ -48,9 +48,9 @@ ABBR = {'01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','1
 def fred(series_id, start):
     url = f'https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}&cosd={start}-01-01'
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (job-market-map refresh)'})
-    for i in range(2):
+    for i in range(1):
         try:
-            with urllib.request.urlopen(req, timeout=60) as r:
+            with urllib.request.urlopen(req, timeout=15) as r:
                 txt = r.read().decode('utf-8', 'replace')
             pts = {}
             for line in txt.splitlines()[1:]:
@@ -90,7 +90,9 @@ def main():
     log(f'BLS API series with data: {got} of {2 * len(ids)}')
     if got < 2 * len(ids):
         log('falling back to FRED for the missing series')
-        for f in ids:
+        probe = fred('MOUR', year - 1)
+        log('FRED probe MOUR points:', len(probe))
+        for f in (ids if probe else []):
             ab = ABBR[f]
             if not series.get(f'LASST{f}0000000000003'): series[f'LASST{f}0000000000003'] = fred(f'{ab}UR', year - 1); time.sleep(0.3)
             if not series.get(f'SMS{f}000000000000001'): series[f'SMS{f}000000000000001'] = fred(f'{ab}NA', year - 1); time.sleep(0.3)
