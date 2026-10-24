@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Refresh data/states.csv from the BLS public API (v1 needs no key; 25 requests/day, 10 series each).
+"""Refresh data/states.csv from the BLS public API, falling back to FRED.
+
+From GitHub-hosted runners the BLS site returns a 503 bot-block and FRED's CSV endpoint times out, so in
+practice set a free FRED_API_KEY secret (https://fred.stlouisfed.org/docs/api/api_key.html); the script then
+reads the same BLS series through FRED's official API (XXUR = state unemployment rate, XXNA = nonfarm payrolls).
 
 Series used, per state FIPS ss:
   LASSTss0000000000003  unemployment rate, seasonally adjusted (LAUS)
@@ -45,7 +49,24 @@ def fetch(series, start, end):
 ABBR = {'01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','10':'DE','11':'DC','12':'FL','13':'GA','15':'HI','16':'ID','17':'IL','18':'IN','19':'IA','20':'KS','21':'KY','22':'LA','23':'ME','24':'MD','25':'MA','26':'MI','27':'MN','28':'MS','29':'MO','30':'MT','31':'NE','32':'NV','33':'NH','34':'NJ','35':'NM','36':'NY','37':'NC','38':'ND','39':'OH','40':'OK','41':'OR','42':'PA','44':'RI','45':'SC','46':'SD','47':'TN','48':'TX','49':'UT','50':'VT','51':'VA','53':'WA','54':'WV','55':'WI','56':'WY'}
 
 
+FRED_KEY = os.environ.get('FRED_API_KEY', '')
+
+
 def fred(series_id, start):
+    if FRED_KEY:  # official API (free key): the dependable path from cloud runners
+        url = f'https://api.stlouisfed.org/fred/series/observations?series_id={series_id}&api_key={FRED_KEY}&file_type=json&observation_start={start}-01-01'
+        req = urllib.request.Request(url, headers={'User-Agent': 'job-market-map refresh'})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                obs = json.loads(r.read()).get('observations', [])
+            pts = {}
+            for o in obs:
+                if o.get('value') not in ('.', '', None):
+                    try: pts[o['date'][:7]] = float(o['value'])
+                    except ValueError: pass
+            return pts
+        except Exception as e:
+            log('FRED API failed:', series_id, repr(e)); return {}
     url = f'https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}&cosd={start}-01-01'
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (job-market-map refresh)'})
     for i in range(1):

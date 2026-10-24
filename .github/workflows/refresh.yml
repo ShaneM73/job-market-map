@@ -22,6 +22,7 @@ jobs:
       - name: Pull state series from the BLS API
         env:
           BLS_API_KEY: ${{ secrets.BLS_API_KEY }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: |
           python scripts/refresh_bls.py 2> data/refresh_log.txt || echo "refresh exited $?" >> data/refresh_log.txt
           echo "run $(date -u +%FT%TZ)" >> data/refresh_log.txt

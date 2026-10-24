@@ -25,8 +25,10 @@ Or enable GitHub Pages (Settings → Pages → `main`, root). d3 is vendored; th
 | `data/metros.csv` | Metro winners/losers from the BLS metro release | By hand after each metro release |
 | `data/states_geo.json` | Simplified state outlines (Albers USA, from us-atlas / Census) | Static |
 
-Notes on the automated layer: the BLS API v1 needs no key but allows 25 requests a day; adding a free
-`BLS_API_KEY` repository secret switches the script to v2 (bigger batches). The script writes the
+**Setup (one time):** GitHub's runners are bot-blocked by bls.gov, so the script reads the same BLS series through
+FRED's official API. Get a free key at https://fred.stlouisfed.org/docs/api/api_key.html and add it as a repository
+secret named `FRED_API_KEY` (Settings → Secrets and variables → Actions). A `BLS_API_KEY` secret is optional and is tried first.
+Each run writes `data/refresh_log.txt` so you can see what happened without opening the Actions logs. The script writes the
 12-month job change for every state; BLS's own release only highlights the changes it deems statistically
 significant, so small figures should be read as "about flat". The initial seed (September 2026) carries
 job changes only for the states BLS flagged; the first automated run fills in all 51.
