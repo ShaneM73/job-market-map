@@ -50,6 +50,7 @@
   .takeaways { display:grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 10px 18px; margin-top: 14px; font-size: 13px; line-height: 1.5; }
   .takeaways div { border-left: 3px solid var(--accent); padding-left: 10px; }
   .bar text { font-size: 11px; }
+  @media (prefers-reduced-motion: no-preference) { path.dash { animation: flow 1.2s linear infinite; } @keyframes flow { to { stroke-dashoffset: -12; } } }
   .foot a { color: inherit; }
 </style>
 </head>
@@ -152,7 +153,7 @@
     uchg:  { title: 'Change in unemployment vs. a year ago', field: 'unemployment_change_pts', fmt: v => (v > 0 ? '+' : '') + f1(v) + ' pt', kind: 'div', invert: true, note: 'Green = rate fell (sinks below the plane); red = rate rose' },
     jobs:  { title: 'Nonfarm job growth, 12 months', field: 'jobs_change_12mo_pct', fmt: v => fp(v), kind: 'div', note: 'Green rises, red sinks; grey = not statistically significant / not yet loaded' },
     geo:   { title: 'Geospatial hubs', field: null, kind: 'hubs', note: 'States flat and grey; marker height and size = hub score from the research report' },
-    moves: { title: 'Federal reshuffle 2025–26', field: null, kind: 'moves', note: 'Arcs = agency relocations out of Washington (blue); red rings = cuts at civil science agencies' },
+    moves: { title: 'Federal reshuffle 2025–26', field: null, kind: 'moves', note: 'Arrows = agency relocations, pale at the origin, solid blue at the destination, thicker for 1,000+ jobs; red dashed rings = cuts at civil science agencies' },
   };
   const CHAPTERS = [
     { id: 'c1', label: '1 · A stalled market', layer: 'unemp', hubs: false, text: 'Unemployment has sat between 4.1% and 4.3% since March 2026, yet payrolls grew only 29,000 in September. It is a "low-hire, low-fire" market: few layoffs, but hiring plans at a 15-year low and wages trailing inflation. The Dakotas, New England and the Plains are tightest; DC, California, Michigan and Connecticut loosest.' },
@@ -213,7 +214,7 @@
     let hScale, color, lgLo, lgHi;
     if (L.kind === 'seq') { const [lo, hi] = d3.extent(vals); hScale = d3.scaleLinear([lo, hi], [4, 90]); const ramp = d3.interpolateRgb(ok, bad); color = v => isNaN(v) ? grey : ramp((v - lo) / (hi - lo)); lgLo = `${f1(lo)}%`; lgHi = `${f1(hi)}%`; $('lg-bar').style.background = `linear-gradient(90deg, ${ok}, ${bad})`; }
     else if (L.kind === 'div') { const m = d3.max(vals, v => Math.abs(v)) || 1; hScale = d3.scaleLinear([0, m], [0, 90]); const up = d3.interpolateRgb(grey, ok), dn = d3.interpolateRgb(grey, bad); const sgn = L.invert ? -1 : 1; color = v => isNaN(v) ? grey : (v * sgn >= 0 ? up(Math.min(1, Math.abs(v) / m)) : dn(Math.min(1, Math.abs(v) / m))); lgLo = L.fmt(-m); lgHi = L.fmt(m); $('lg-bar').style.background = L.invert ? `linear-gradient(90deg, ${ok}, ${grey}, ${bad})` : `linear-gradient(90deg, ${bad}, ${grey}, ${ok})`; }
-    else if (L.kind === 'moves') { hScale = () => 0; color = () => grey; lgLo = 'Relocation'; lgHi = 'Cut'; $('lg-bar').style.background = `linear-gradient(90deg, ${accent}, ${bad})`; }
+    else if (L.kind === 'moves') { hScale = () => 0; color = () => grey; lgLo = 'Origin (Washington)'; lgHi = 'Destination ▶'; $('lg-bar').style.background = `linear-gradient(90deg, ${d3.interpolateRgb(accent, '#ffffff')(0.55)}, ${accent})`; }
     else { hScale = () => 0; color = () => grey; lgLo = 'Hub score 50'; lgHi = '100'; $('lg-bar').style.background = `linear-gradient(90deg, ${grey}, ${accent})`; }
     $('lg-lo').textContent = lgLo; $('lg-hi').textContent = lgHi; $('lg-note').textContent = '· ' + L.note;
 
@@ -245,11 +246,14 @@
     const marks = [];
     if (hubsOn) D.hubs.forEach(h => { const p = proj([num(h.lon), num(h.lat)]); if (!p) return; marks.push({ kind: 'hub', x: p[0], y: p[1], base: stateH(h.state), hgt: Math.round((num(h.geo_score) - 40) * 1.6), r: 4 + (num(h.geo_score) - 50) / 8, d: h, focus: focusHub === h.hub, dim: focusHub && focusHub !== h.hub }); });
     if (metrosOn) D.metros.forEach(m => { const p = proj([num(m.lon), num(m.lat)]); if (!p) return; const g = num(m.jobs_change_12mo_pct), n = num(m.jobs_change_12mo); const good = !isNaN(g) ? g > 0 : !isNaN(n) ? n > 0 : null; marks.push({ kind: 'metro', x: p[0], y: p[1], base: stateH(m.state), hgt: 0, r: 4, d: m, good }); });
+    const defs = svg.append('defs'); defs.append('marker').attr('id', 'arrow').attr('viewBox', '0 0 10 10').attr('refX', 9).attr('refY', 5).attr('markerWidth', 7).attr('markerHeight', 7).attr('orient', 'auto-start-reverse').append('path').attr('d', 'M0,0 L10,5 L0,10 z').attr('fill', accent);
     const gArcs = gMarks.append('g'); const arcs = [];
     if (L.kind === 'moves') { const seen = new Map(); D.moves.forEach(mv => { const a = proj([num(mv.from_lon), num(mv.from_lat)]), b = proj([num(mv.to_lon), num(mv.to_lat)]); if (!a || !b) return; const key = mv.kind + '|' + mv.to; const n = (seen.get(key) || 0); seen.set(key, n + 1);
       const total = d3.sum(D.moves.filter(x => x.kind === mv.kind && x.to === mv.to), x => num(x.jobs) || 0); arcs.push({ a, b, d: mv, cut: mv.kind === 'cutting', first: n === 0, idx: n, total }); }); }
     const ga = gArcs.selectAll('g.arc').data(arcs).join('g').attr('class', 'arc').style('cursor', 'pointer');
-    ga.filter(d => !d.cut).append('path').attr('fill', 'none').attr('stroke', accent).attr('stroke-width', d => num(d.d.jobs) >= 1000 ? 3 : 1.8).attr('stroke-opacity', .85).attr('stroke-linecap', 'round');
+    ga.filter(d => !d.cut).each(function (d, i) { const lg = defs.append('linearGradient').attr('id', 'arcg' + i).attr('gradientUnits', 'userSpaceOnUse'); lg.append('stop').attr('offset', '0%').attr('stop-color', d3.interpolateRgb(accent, '#ffffff')(0.55)); lg.append('stop').attr('offset', '100%').attr('stop-color', accent); d.gid = 'arcg' + i; });
+    ga.filter(d => !d.cut).append('path').attr('class', 'flow').attr('fill', 'none').attr('stroke', d => `url(#${d.gid})`).attr('stroke-width', d => num(d.d.jobs) >= 1000 ? 4.5 : 2.8).attr('stroke-linecap', 'round').attr('marker-end', 'url(#arrow)');
+    ga.filter(d => !d.cut).append('path').attr('class', 'dash').attr('fill', 'none').attr('stroke', '#fff').attr('stroke-opacity', .55).attr('stroke-width', d => num(d.d.jobs) >= 1000 ? 1.6 : 1).attr('stroke-dasharray', '3 14').attr('stroke-linecap', 'round');
     ga.filter(d => !d.cut).append('circle').attr('class', 'end').attr('r', d => num(d.d.jobs) >= 1000 ? 6 : 4).attr('fill', accent).attr('stroke', '#fff').attr('stroke-width', 1.2);
     ga.filter(d => d.cut).append('circle').attr('class', 'end').attr('r', d => 8 + Math.sqrt(Math.abs(num(d.d.jobs))) / 4).attr('fill', 'none').attr('stroke', bad).attr('stroke-width', 2.5).attr('stroke-dasharray', '4 3');
     ga.append('text').attr('class', 'al').attr('font-size', '10px').attr('font-weight', '600').attr('fill', css('--fg')).text(d => d.cut ? d.d.move : (d.first ? `${d.d.to}${d.total ? ' · ' + d3.format(',')(d.total) : ''}` : ''));
@@ -282,7 +286,8 @@
         g.select('text.hl').attr('x', x1 + d.r + 3).attr('y', y1 + 3); });
       ga.each(function (d) { const g = d3.select(this); const [ax, ay] = P(d.a[0], d.a[1], 0), [bx, by] = P(d.b[0], d.b[1], 0);
         const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1; const lift = Math.min(140, len * 0.35); const mx = (ax + bx) / 2 - dy / len * 0, my = (ay + by) / 2 - lift;
-        g.select('path').attr('d', `M${ax},${ay} Q${mx},${my} ${bx},${by}`);
+        g.selectAll('path').attr('d', `M${ax},${ay} Q${mx},${my} ${bx},${by}`);
+        if (d.gid) svg.select('#' + d.gid).attr('x1', ax).attr('y1', ay).attr('x2', bx).attr('y2', by);
         g.select('circle.end').attr('cx', bx).attr('cy', by);
         g.select('text.al').attr('x', bx + 8).attr('y', by + (d.cut ? (d.d.to === 'Reston' ? 20 : -12) : 4)); });
       $('rot').value = Math.round(view.rot); $('tilt').value = Math.round(view.tilt * 100);
