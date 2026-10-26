@@ -1,8 +1,3 @@
-BLS HTTP error: 503 b'<!DOCTYPE HTML>\r\n<html lang="en-us">\t\r\n\t<head>\t\r\n<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\r\n<title>The BLS website is busy</title>\r\n\n<script>(window.BOOMR_mq=window.BOOMR_mq||[]).push(["addVar",{"rua.upush":"false","rua.cpush":"false","rua.upre":"false","rua.cpre":"false"'
-BLS API unreachable or refused; skipping to FRED
-BLS API series with data: 0 of 102
-falling back to FRED for the missing series
-FRED probe MOUR points: 20
-after FRED: 102 of 102
+BLS API series with data: 102 of 102
 wrote states.csv for 2026-09
-run 2026-10-24T20:57:50Z
+run 2026-10-26T22:19:32Z
