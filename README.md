@@ -1,6 +1,6 @@
 # US job market 2026 — 3-D map infographic
 
-**[📄 Read the research report](report/Geospatial-job-market-geography-2026.md)** · live map: enable GitHub Pages (Settings → Pages → `main`, root) and open `https://shanem73.github.io/job-market-map/` — the report is then also at `…/job-market-map/report.html`.
+**[🗺️ Open the live 3-D map](https://shanem73.github.io/job-market-map/)** · **[📄 Read the research report](https://shanem73.github.io/job-market-map/report.html)** ([Markdown version](report/Geospatial-job-market-geography-2026.md))
 
 A single-page, data-driven 3-D map of the US labor market, built for geospatial-science students and
 professionals. States rise and sink with the chosen measure; pins mark the ten metros where geospatial
@@ -8,7 +8,7 @@ work concentrates; four short chapters walk through the story.
 
 **Layers:** unemployment rate · change vs. a year ago · 12-month nonfarm job growth · geospatial hubs · federal reshuffle (arcs)
 **Markers:** hub pins (height = hub score, hover for the case for each), metro dots (job winners/losers)
-**Interaction:** drag to pan, scroll to zoom, Shift+drag (or sliders) to rotate and tilt; click a hub pin or a relocation arrow
+**Interaction:** drag to pan, scroll to zoom, Shift+drag (or sliders) to rotate and tilt; click a hub pin or any relocation curve
 for a standing information card at that spot (close with × or click the map). In chapters 4–5 the base map is a shaded-relief
 terrain plate (Natural Earth 1:50m shaded relief + hypsometric tint, public domain, reprojected to Albers USA; `data/relief_albers.jpg`,
 rebuilt with `scripts/build_relief.py`).
