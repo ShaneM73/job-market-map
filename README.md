@@ -2,6 +2,8 @@
 
 **[🗺️ Open the live 3-D map](https://shanem73.github.io/job-market-map/)** · **[📄 Read the research report](https://shanem73.github.io/job-market-map/report.html)** ([Markdown version](report/Geospatial-job-market-geography-2026.md))
 
+**Designer and main contributor:** Prof. Xin (Shane) Miao, Missouri State University ([@ShaneM73](https://github.com/ShaneM73))
+
 A single-page, data-driven 3-D map of the US labor market, built for geospatial-science students and
 professionals. States rise and sink with the chosen measure; pins mark the ten metros where geospatial
 work concentrates; four short chapters walk through the story.
