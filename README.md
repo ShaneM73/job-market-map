@@ -53,3 +53,7 @@ Hub rankings are in `data/hubs.csv`; add or re-rank rows and the pins, list and 
 
 Built from the research report "Geospatial job market geography 2026" (October 24, 2026). Not career or
 investment advice.
+
+## License
+
+Code and the research report are released under the [MIT License](LICENSE). BLS, OEWS and other data in `data/` are public-domain US government statistics; Natural Earth relief is public domain.
