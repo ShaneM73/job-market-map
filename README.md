@@ -1,6 +1,6 @@
 # US job market 2026 — 3-D map infographic
 
-**[🗺️ Open the live 3-D map](https://shanem73.github.io/job-market-map/)** · **[📄 Read the research report](https://shanem73.github.io/job-market-map/report.html)** ([Markdown version](report/Geospatial-job-market-geography-2026.md))
+**[🗺️ Open the live 3-D map](https://shanem73.github.io/job-market-map/)** · **[📄 Read the research report](https://shanem73.github.io/job-market-map/report.html)** ([Markdown version](report/Geospatial-job-market-geography-2026.md)) · **[📍 Missouri & Springfield atlas](https://shanem73.github.io/job-market-map/atlas.html)**
 
 **Designer and main contributor:** Prof. Xin (Shane) Miao, Missouri State University ([@ShaneM73](https://github.com/ShaneM73))
 
@@ -17,6 +17,13 @@ rebuilt with `scripts/build_relief.py`).
 
 **Report:** the full research report behind the hub ranking is in `report/` (Markdown) and rendered as `report.html`;
 the map page ends with its key findings and two charts (pay after rent by hub; core occupations vs. graduates).
+
+**Missouri & Springfield atlas (`atlas.html`):** a companion page with five tabs: national, Missouri and
+Springfield / Southwest Missouri statistics for the core spatial occupations (BLS OEWS and OOH), the skills employers
+ask for (O*NET 2025 posting analysis) matched to local employer types, and a job-search launcher that builds
+searches on Indeed, LinkedIn, USAJobs, GovernmentJobs, ZipRecruiter and Google Jobs for a chosen role and area.
+Figures are written into the page; Springfield MSA detail is May 2023 OEWS (latest published for these occupations).
+Tabs are linkable: `atlas.html#national`, `#missouri`, `#local`, `#skills`, `#jobs`.
 
 ## Run it
 
