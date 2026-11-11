@@ -1,12 +1,16 @@
-# US job market 2026 — 3-D map infographic
+# Geospatial job market 2026 — 3-D US map & Missouri atlas
 
-**[🗺️ Open the live 3-D map](https://shanem73.github.io/job-market-map/)** · **[📄 Read the research report](https://shanem73.github.io/job-market-map/report.html)** ([Markdown version](report/Geospatial-job-market-geography-2026.md)) · **[📍 Missouri & Springfield atlas](https://shanem73.github.io/job-market-map/atlas.html)**
+**[🗺️ Open the live app](https://shanem73.github.io/job-market-map/)** · **[📄 Read the research report](https://shanem73.github.io/job-market-map/report.html)** ([Markdown version](report/Geospatial-job-market-geography-2026.md)) · **[📍 Missouri & Springfield atlas tab](https://shanem73.github.io/job-market-map/#atlas)**
 
 **Designer and main contributor:** Prof. Xin (Shane) Miao, Missouri State University ([@ShaneM73](https://github.com/ShaneM73))
 
-A single-page, data-driven 3-D map of the US labor market, built for geospatial-science students and
-professionals. States rise and sink with the chosen measure; pins mark the ten metros where geospatial
-work concentrates; four short chapters walk through the story.
+A single-page, data-driven guide to the 2026 job market for geospatial-science students and professionals,
+with two tabs:
+
+- **3-D US map** — states rise and sink with the chosen measure; pins mark the ten metros where geospatial
+  work concentrates; five short chapters walk through the story.
+- **Missouri & Springfield atlas** — national, Missouri and Springfield / Southwest Missouri statistics for the
+  core spatial occupations, the skills employers ask for, and a launcher for live job searches.
 
 **Layers:** unemployment rate · change vs. a year ago · 12-month nonfarm job growth · geospatial hubs · federal reshuffle (arcs)
 **Markers:** hub pins (height = hub score, hover for the case for each), metro dots (job winners/losers)
@@ -18,12 +22,15 @@ rebuilt with `scripts/build_relief.py`).
 **Report:** the full research report behind the hub ranking is in `report/` (Markdown) and rendered as `report.html`;
 the map page ends with its key findings and two charts (pay after rent by hub; core occupations vs. graduates).
 
-**Missouri & Springfield atlas (`atlas.html`):** a companion page with five tabs: national, Missouri and
-Springfield / Southwest Missouri statistics for the core spatial occupations (BLS OEWS and OOH), the skills employers
-ask for (O*NET 2025 posting analysis) matched to local employer types, and a job-search launcher that builds
-searches on Indeed, LinkedIn, USAJobs, GovernmentJobs, ZipRecruiter and Google Jobs for a chosen role and area.
-Figures are written into the page; Springfield MSA detail is May 2023 OEWS (latest published for these occupations).
-Tabs are linkable: `atlas.html#national`, `#missouri`, `#local`, `#skills`, `#jobs`.
+**Missouri & Springfield atlas tab:** five sections — United States, Missouri, Springfield & SW Missouri,
+Skills employers want, and Find open jobs. It covers employment, median pay, outlook and location quotients for
+cartographers & photogrammetrists, surveying & mapping technicians, surveyors and geographers (BLS OEWS and OOH);
+employer types in the Springfield metro; the tools GIS postings name (O*NET 2025 posting analysis) matched to local
+employer types; and a search launcher that builds queries on Indeed, LinkedIn, USAJobs, GovernmentJobs, ZipRecruiter
+and Google Jobs for chosen roles and an area. Each section has its own link: `#atlas-national`, `#atlas-missouri`,
+`#atlas-local`, `#atlas-skills`, `#atlas-jobs`. The atlas figures are written into `index.html` (not the CSV files)
+and are updated by hand; Springfield MSA detail is May 2023 OEWS, the latest published for these occupations.
+The old `atlas.html` address redirects to the tab.
 
 ## Run it
 
@@ -55,7 +62,8 @@ job changes only for the states BLS flagged; the first automated run fills in al
 
 ## Updating the story
 
-Chapter text and the layer definitions live at the top of the script in `index.html` (`CHAPTERS`, `LAYERS`).
+Chapter text and the layer definitions live at the top of the map script in `index.html` (`CHAPTERS`, `LAYERS`).
+The atlas tab's markup sits in the `atlas-tab` block of `index.html`, and its chart values and job-board links are in the second `<script>`.
 Hub rankings are in `data/hubs.csv`; add or re-rank rows and the pins, list and tooltips follow.
 
 Built from the research report "Geospatial job market geography 2026" (October 24, 2026). Not career or

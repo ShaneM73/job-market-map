@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>US Job Market 2026 — 3-D map</title>
+<title>Geospatial Job Market 2026 — 3-D US map &amp; Missouri atlas</title>
+<meta name="description" content="Interactive 3-D map of the 2026 US job market for geospatial science, plus a Missouri and Springfield atlas of GIS jobs, pay, skills and live job searches.">
 <script src="vendor/d3.v7.min.js"></script>
 <style>
   :root { --fg:#1b1b1b; --muted:#5f5f5c; --bg:#f3f3ef; --panel:#ffffff; --line:#dddcd6; --ok:#1f7a3a; --bad:#b3261e; --accent:#3b5bdb; --grey:#b9b9b3;
@@ -56,14 +57,79 @@
   .panel3d .pc { all: unset; position: absolute; top: 4px; right: 8px; cursor: pointer; font-size: 16px; color: var(--muted); }
   @media (prefers-reduced-motion: no-preference) { path.dash { animation: flow 1.2s linear infinite; } @keyframes flow { to { stroke-dashoffset: -12; } } }
   .foot a { color: inherit; }
+  .intro { max-width: 70rem; margin: 0 0 10px; line-height: 1.5; font-size: 14px; }
+  /* ---- Top-level app tabs ---- */
+  .apptabs { display:flex; flex-wrap:wrap; gap:6px; margin: 4px 0 14px; border-bottom:1px solid var(--line); }
+  .apptabs a { text-decoration:none; color:var(--muted); font-size:14px; font-weight:600; padding:8px 14px; border:1px solid transparent; border-bottom:none; border-radius:10px 10px 0 0; margin-bottom:-1px; }
+  .apptabs a:hover { color:var(--fg); }
+  .apptabs a.on { color:var(--fg); background:var(--panel); border-color:var(--line); }
+  .apptabs a .tag { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#fff; background:var(--accent); border-radius:999px; padding:1px 7px; margin-left:6px; vertical-align:2px; }
+  .apptabs a:focus-visible, #atlas-tab a:focus-visible, #atlas-tab button:focus-visible, #atlas-tab select:focus-visible, #atlas-tab input:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  /* ---- Missouri & Springfield atlas (all rules scoped to #atlas) ---- */
+  #atlas-tab { --warn:#9a6400; }
+  @media (prefers-color-scheme: dark) { #atlas-tab { --warn:#e0a83a; } }
+  #atlas-tab .at-sub { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px; }
+  #atlas-tab .at-sub a { text-decoration:none; border:1px solid var(--line); border-radius:999px; padding:4px 12px; font-size:12px; color:var(--fg); background:var(--panel); }
+  #atlas-tab .at-sub a.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  #atlas-tab [hidden], #tab-map[hidden] { display:none !important; }
+  #atlas-tab .at-view { display:grid; gap:14px; }
+  #atlas-tab h2 { font-family:var(--serif); font-weight:400; font-size:24px; margin:0 0 4px; }
+  #atlas-tab h3 { font-size:15px; font-weight:600; margin:0 0 6px; }
+  #atlas-tab p { margin:0; line-height:1.5; }
+  #atlas-tab .at-lede { color:var(--muted); max-width:70rem; font-size:14px; }
+  #atlas-tab .at-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap:14px; }
+  #atlas-tab .at-grid > * { min-width:0; }
+  #atlas-tab .at-cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap:10px; }
+  #atlas-tab .at-cards .card h3 { margin-top:2px; }
+  #atlas-tab .at-cards .card p { font-size:13px; }
+  #atlas-tab .at-kicker { font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); }
+  #atlas-tab ul.at-list { margin:4px 0 0; padding-left:18px; font-size:13px; line-height:1.55; }
+  #atlas-tab .at-scroll { overflow-x:auto; }
+  #atlas-tab table { font-size:12.5px; } #atlas-tab td { vertical-align:top; }
+  #atlas-tab .at-pill { display:inline-block; font-size:11px; padding:0 7px; border-radius:999px; border:1px solid currentColor; white-space:nowrap; }
+  #atlas-tab .at-flat { color:var(--warn); }
+  #atlas-tab .at-callout { font-size:13px; line-height:1.5; padding:10px 12px; border-left:3px solid var(--accent); background:color-mix(in srgb, var(--accent) 7%, transparent); border-radius:0 8px 8px 0; }
+  #atlas-tab .at-bars { display:grid; gap:8px; }
+  #atlas-tab .at-bar { display:grid; grid-template-columns:minmax(7rem, 11rem) 1fr; gap:10px; align-items:center; font-size:12.5px; }
+  #atlas-tab .at-stack { display:grid; gap:3px; }
+  #atlas-tab .at-track { position:relative; height:20px; background:color-mix(in srgb, var(--grey) 35%, transparent); border-radius:4px; overflow:hidden; }
+  #atlas-tab .at-stack .at-track { height:15px; }
+  #atlas-tab .at-fill { position:absolute; inset:0 auto 0 0; background:var(--accent); border-radius:4px; }
+  #atlas-tab .at-fill.hl { background:var(--ok); }
+  #atlas-tab .at-row { display:grid; grid-template-columns:1fr 4.8rem; gap:8px; align-items:center; }
+  #atlas-tab .at-val { font-size:11.5px; color:var(--fg); text-align:right; white-space:nowrap; }
+  #atlas-tab .at-val.na { text-align:left; color:var(--muted); }
+  #atlas-tab .at-key { display:flex; flex-wrap:wrap; gap:14px; font-size:12px; color:var(--muted); }
+  #atlas-tab .at-key i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+  #atlas-tab .at-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  #atlas-tab .at-chip { all:unset; cursor:pointer; border:1px solid var(--line); border-radius:999px; padding:4px 11px; font-size:12px; color:var(--fg); background:var(--panel); }
+  #atlas-tab .at-chip[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#fff; }
+  #atlas-tab .at-form { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap:10px; }
+  #atlas-tab .at-form label { display:grid; gap:4px; font-size:12px; color:var(--muted); }
+  #atlas-tab select, #atlas-tab input[type=text] { font:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--fg); width:100%; }
+  #atlas-tab .at-links { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap:8px; }
+  #atlas-tab .at-links a { display:grid; gap:2px; text-decoration:none; color:var(--fg); background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+  #atlas-tab .at-links a:hover { border-color:var(--accent); }
+  #atlas-tab .at-links b { font-size:14px; } #atlas-tab .at-links span { font-size:12px; color:var(--muted); }
+  #atlas-tab .at-sources { font-size:12px; color:var(--muted); line-height:1.5; }
+  #atlas-tab .at-sources ol { margin:4px 0 0; padding-left:18px; }
+  #atlas-tab .at-sources a { color:inherit; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="titlebar">
-    <h1>US job market, 2026 — a 3-D map</h1>
-    <div class="links"><a class="btn" href="report.html">Read the full report →</a><a class="btn plain" href="atlas.html">Missouri &amp; Springfield atlas</a><a class="btn plain" href="#findings">Key findings</a></div>
+    <h1>Geospatial job market, 2026</h1>
+    <div class="links"><a class="btn" href="report.html">Read the full report →</a><a class="btn plain" href="#findings">Key findings</a><a class="btn plain" href="#atlas-jobs">Find open jobs</a></div>
   </div>
+  <p class="intro">An interactive guide to the 2026 job market for geospatial science students and professionals. The <b>3-D US map</b> shows state unemployment and job growth, the ten metros where geospatial work concentrates, and the 2025–26 federal reshuffle. The <b>Missouri &amp; Springfield atlas</b> zooms in to national, state and Springfield / Southwest Missouri statistics for GIS, cartography and surveying jobs, the skills employers ask for, and a launcher for live job searches.</p>
+  <nav class="apptabs" aria-label="Views">
+    <a href="#us-map" data-tab="map" class="on">3-D US map</a>
+    <a href="#atlas" data-tab="atlas">Missouri &amp; Springfield atlas<span class="tag">New</span></a>
+  </nav>
+
+  <!-- ===== Tab: 3-D US map ===== -->
+  <div id="tab-map">
   <p class="lede" id="lede">Loading…</p>
 
   <div class="tiles" id="tiles"></div>
@@ -133,6 +199,198 @@
   </div>
 
   <p class="foot" id="foot"></p>
+  </div>
+
+  <!-- ===== Tab: Missouri & Springfield atlas ===== -->
+  <div id="atlas-tab" hidden>
+    <nav class="at-sub" aria-label="Atlas sections">
+      <a href="#atlas-national" data-v="national">United States</a>
+      <a href="#atlas-missouri" data-v="missouri">Missouri</a>
+      <a href="#atlas-local" data-v="local">Springfield &amp; SW Missouri</a>
+      <a href="#atlas-skills" data-v="skills">Skills employers want</a>
+      <a href="#atlas-jobs" data-v="jobs">Find open jobs</a>
+    </nav>
+
+    <!-- National -->
+    <div class="at-view" id="at-national">
+      <div><h2>Spatial science jobs: United States</h2>
+        <p class="at-lede">Cartographers and photogrammetrists, the BLS category that holds most GIS analysts, are projected to grow 7% from 2025 to 2035, against 3% for all occupations. The "geographer" title is shrinking, but the work is spreading into titles such as GIS analyst, geospatial developer and imagery analyst.</p></div>
+      <div class="tiles">
+        <div class="tile"><div class="l">GIS / cartography median pay</div><div class="v">$81,390</div><div class="n">May 2025 · cartographers &amp; photogrammetrists</div></div>
+        <div class="tile"><div class="l">Projected growth</div><div class="v">+7%</div><div class="n">2025–35 · much faster than average</div></div>
+        <div class="tile"><div class="l">Openings per year</div><div class="v">~900</div><div class="n">Cartographers &amp; photogrammetrists</div></div>
+        <div class="tile"><div class="l">Core spatial jobs</div><div class="v">~131k</div><div class="n">Cartographers, mapping techs, surveyors, geographers</div></div>
+      </div>
+      <div class="at-grid">
+        <div class="card"><h3>Core spatial occupations</h3>
+          <div class="at-scroll"><table>
+            <thead><tr><th>Occupation (SOC)</th><th class="num">Jobs</th><th class="num">Median pay</th><th>Outlook</th></tr></thead>
+            <tbody>
+              <tr><td>Cartographers &amp; photogrammetrists (17-1021)</td><td class="num">14,700</td><td class="num">$81,390</td><td><span class="at-pill up">+7%</span></td></tr>
+              <tr><td>Surveying &amp; mapping technicians (17-3031)</td><td class="num">58,800</td><td class="num">$54,240</td><td><span class="at-pill up">+6%</span></td></tr>
+              <tr><td>Surveyors (17-1022)</td><td class="num">56,100*</td><td class="num">$75,440</td><td><span class="at-pill at-flat">+4%*</span></td></tr>
+              <tr><td>Geographers (19-3092)</td><td class="num">1,500*</td><td class="num">$102,040</td><td><span class="at-pill down">−3%*</span></td></tr>
+            </tbody></table></div>
+          <p class="note" style="margin-top:8px">Pay is the May 2025 median. Jobs and outlook use the 2025 base and 2025–35 projections, except * (2024 base, 2024–34).</p>
+        </div>
+        <div class="card"><h3>Related fields that hire GIS skills</h3>
+          <div class="at-bars" id="at-rel"></div>
+          <p class="note" style="margin-top:8px">Median annual pay, May 2025. Green bar = cartographers / GIS.</p>
+        </div>
+        <div class="card"><h3>Who employs GIS and cartography workers</h3>
+          <div class="at-bars" id="at-ind"></div>
+          <p class="note" style="margin-top:8px">Share of cartographer &amp; photogrammetrist jobs, 2025. Government is the biggest employer.</p>
+        </div>
+        <div class="card"><h3>Pay by employer type</h3>
+          <div class="at-bars" id="at-payind"></div>
+          <p class="note" style="margin-top:8px">Median pay by industry, May 2025. The occupation ranges from $53,740 (10th percentile) to $126,950 (90th).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Missouri -->
+    <div class="at-view" id="at-missouri" hidden>
+      <div><h2>Spatial science jobs: Missouri</h2>
+        <p class="at-lede">Missouri pays a little below the national median for spatial work, with lower living costs. The state's growth center is St. Louis, where the $1.7 billion Next NGA West campus opened in fall 2025 and the region counts more than 10,000 geospatial-related jobs.</p></div>
+      <div class="tiles">
+        <div class="tile"><div class="l">GIS / cartography median</div><div class="v">$76,950</div><div class="n">5% below US · 170 employed</div></div>
+        <div class="tile"><div class="l">Mapping technician median</div><div class="v">$51,700</div><div class="n">720 employed</div></div>
+        <div class="tile"><div class="l">Surveyor median</div><div class="v">$62,110</div><div class="n">830 employed</div></div>
+        <div class="tile"><div class="l">St. Louis geospatial jobs</div><div class="v">10,000+</div><div class="n">Includes ~3,000 at NGA West</div></div>
+      </div>
+      <div class="card"><h3>Missouri vs. US median pay</h3>
+        <div class="at-key" style="margin-bottom:8px"><span><i style="background:var(--accent)"></i>United States</span><span><i style="background:var(--ok)"></i>Missouri</span></div>
+        <div class="at-bars" id="at-mo"></div>
+        <p class="note" style="margin-top:8px">BLS OEWS May 2025. Missouri's location quotient is 0.65 for cartographers and 0.86 for surveyors (1.0 = national concentration).</p>
+      </div>
+      <div class="at-cards">
+        <div class="card"><span class="at-kicker">St. Louis · federal</span><h3>NGA West</h3><p>Opened fall 2025 with about 3,000 staff. Imagery analysis, GEOINT and data science; most roles need a security clearance.</p></div>
+        <div class="card"><span class="at-kicker">St. Louis · industry</span><h3>GeoSTL ecosystem</h3><p>Esri, Enabled Intelligence and defense contractors have opened offices downtown. GeoSTL launched in 2026 to grow the talent pipeline.</p></div>
+        <div class="card"><span class="at-kicker">Statewide · government</span><h3>MoDOT, DNR, counties</h3><p>Survey technician, GIS and right-of-way jobs in district offices. A 2025 MoDOT survey technician posting started at about $41,400.</p></div>
+        <div class="card"><span class="at-kicker">Kansas City &amp; Columbia</span><h3>Engineering &amp; utilities</h3><p>Engineering firms and utilities hire GIS technicians, LiDAR and photogrammetry staff, and survey crews.</p></div>
+      </div>
+    </div>
+
+    <!-- Springfield & SW MO -->
+    <div class="at-view" id="at-local" hidden>
+      <div><h2>Spatial science jobs: Springfield &amp; Southwest Missouri</h2>
+        <p class="at-lede">The Springfield metro (Greene, Christian, Webster, Polk and Dallas counties) is a small spatial market: architecture and engineering jobs are 0.9% of local employment. Most openings come from local government, City Utilities, engineering and survey firms, and a few defense contractors, so expect a handful of postings at a time.</p></div>
+      <div class="tiles">
+        <div class="tile"><div class="l">Surveyors</div><div class="v">60</div><div class="n">Median ≈ $59,780 · LQ 0.82</div></div>
+        <div class="tile"><div class="l">Survey &amp; mapping technicians</div><div class="v">30</div><div class="n">Median ≈ $49,630 · LQ 0.40</div></div>
+        <div class="tile"><div class="l">Urban &amp; regional planners</div><div class="v">40</div><div class="n">Mean $70,570</div></div>
+        <div class="tile"><div class="l">Environmental scientists</div><div class="v">60</div><div class="n">Mean $54,660</div></div>
+      </div>
+      <p class="at-callout"><b>Data note.</b> Springfield MSA figures are BLS OEWS May 2023, the latest year with published detail for these occupations. BLS does not publish a cartographer / GIS count for the metro because the group is too small to estimate. Annual medians are hourly × 2,080. A location quotient (LQ) below 1 means fewer such jobs per worker than the US average.</p>
+      <div class="at-grid">
+        <div class="card"><h3>Median pay at three scales</h3>
+          <div class="at-key" style="margin-bottom:8px"><span><i style="background:var(--accent)"></i>US (2025)</span><span><i style="background:var(--ok)"></i>Missouri (2025)</span><span><i style="background:var(--muted)"></i>Springfield (2023)</span></div>
+          <div class="at-bars" id="at-three"></div>
+        </div>
+        <div class="card"><h3>Recent local postings (examples)</h3>
+          <div class="at-scroll"><table>
+            <thead><tr><th>Role · employer</th><th class="num">Listed pay</th></tr></thead>
+            <tbody>
+              <tr><td>GIS Specialist · City of Springfield</td><td class="num">$43,950–68,390</td></tr>
+              <tr><td>Senior GIS Specialist · Springfield (Jun 2026)</td><td class="num">—</td></tr>
+              <tr><td>GIS Analyst II · City Utilities of Springfield</td><td class="num">—</td></tr>
+              <tr><td>GIS Technician Intern · City Utilities</td><td class="num">Intern</td></tr>
+              <tr><td>Cartographic Analyst · Bridge Defense</td><td class="num">—</td></tr>
+            </tbody></table></div>
+          <p class="note" style="margin-top:8px">Snapshots from 2025–26 job boards; some may be filled. Use <a href="#atlas-jobs" style="color:var(--accent)">Find open jobs</a> for today's listings.</p>
+        </div>
+      </div>
+      <div class="at-cards">
+        <div class="card"><span class="at-kicker">Local government</span><h3>City, county &amp; MPO</h3><p>City of Springfield, Greene and Christian counties, Ozarks Transportation Organization: parcels, addressing, 911, zoning and planning GIS.</p></div>
+        <div class="card"><span class="at-kicker">Utilities</span><h3>City Utilities of Springfield</h3><p>Electric, gas, water and broadband network mapping; asset management, Esri Utility Network, field data collection.</p></div>
+        <div class="card"><span class="at-kicker">Engineering &amp; survey</span><h3>A/E and survey firms</h3><p>Springfield, Ozark and Nixa firms: GNSS, drone mapping, CAD-to-GIS, plats and boundary surveys.</p></div>
+        <div class="card"><span class="at-kicker">State &amp; federal</span><h3>MoDOT SW District, MDC, USGS</h3><p>Transportation, conservation and water-resource mapping, posted on MoCareers and USAJobs.</p></div>
+        <div class="card"><span class="at-kicker">Defense &amp; intelligence</span><h3>Contractors</h3><p>Cartographic and imagery analyst roles, often clearance-gated. Fort Leonard Wood is about 90 miles northeast.</p></div>
+        <div class="card"><span class="at-kicker">Education &amp; research</span><h3>Missouri State, OTC, Drury</h3><p>Lab, research and teaching roles, and the main local source of GIS graduates and interns.</p></div>
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="at-view" id="at-skills" hidden>
+      <div><h2>Skills employers ask for</h2>
+        <p class="at-lede">ArcGIS is still the baseline, but most technical postings now pair it with scripting and databases. In 2025 postings for GIS technologists and technicians analyzed by O*NET, ArcGIS appeared in three of four and Python in about a third.</p></div>
+      <div class="at-grid">
+        <div class="card"><h3>Share of GIS postings naming each tool</h3>
+          <div class="at-bars" id="at-skillbars"></div>
+          <p class="note" style="margin-top:8px">O*NET analysis of 2025 postings for GIS technologists &amp; technicians.</p>
+        </div>
+        <div class="card"><h3>Career ladder</h3>
+          <div class="at-scroll"><table>
+            <thead><tr><th>Level</th><th>What you show</th></tr></thead>
+            <tbody>
+              <tr><td>Intern / technician</td><td>Clean data entry, basic maps, buffer / clip / join in ArcGIS Pro</td></tr>
+              <tr><td>Analyst</td><td>A multi-step analysis from a vague request; web maps and dashboards</td></tr>
+              <tr><td>Senior analyst</td><td>Python automation; publishing to ArcGIS Online / Enterprise</td></tr>
+              <tr><td>Lead / developer</td><td>Databases, APIs, cloud pipelines; defending methods to stakeholders</td></tr>
+            </tbody></table></div>
+        </div>
+      </div>
+      <div class="at-cards">
+        <div class="card"><span class="at-kicker">Tier 1 · nearly every posting</span><h3>Core GIS</h3><ul class="at-list"><li>ArcGIS Pro (QGIS a plus)</li><li>Cartography and map layout</li><li>Coordinate systems and projections</li><li>Data cleaning, QA/QC, metadata</li><li>Overlay, proximity, geocoding</li></ul></div>
+        <div class="card"><span class="at-kicker">Tier 2 · separates candidates</span><h3>Technical</h3><ul class="at-list"><li>Python / ArcPy, ArcGIS API for Python</li><li>SQL, PostgreSQL / PostGIS, geodatabases</li><li>ArcGIS Online / Enterprise, dashboards</li><li>Field Maps and Survey123</li><li>FME, JavaScript web mapping, Git</li></ul></div>
+        <div class="card"><span class="at-kicker">Tier 3 · specialty</span><h3>Sensing &amp; measurement</h3><ul class="at-list"><li>Remote sensing, image classification</li><li>LiDAR, photogrammetry, drone (Part 107)</li><li>GNSS / total station surveying</li><li>AutoCAD Civil 3D, CAD-to-GIS</li><li>GeoAI, machine learning, cloud</li></ul></div>
+        <div class="card"><span class="at-kicker">Every level</span><h3>Professional</h3><ul class="at-list"><li>Explaining results to non-specialists</li><li>Framing problems, judging data fitness</li><li>Attention to positional accuracy</li><li>Project and time management</li><li>Checking AI or automated output</li></ul></div>
+      </div>
+      <div class="card"><h3>What Springfield-area employers emphasize</h3>
+        <div class="at-scroll"><table>
+          <thead><tr><th>Employer type</th><th>Skills to emphasize</th></tr></thead>
+          <tbody>
+            <tr><td>City / county</td><td>Parcels and addressing, ArcGIS Online, Survey123 / Field Maps, public web maps</td></tr>
+            <tr><td>City Utilities &amp; co-ops</td><td>Utility Network data model, asset management, GPS field collection, SQL, versioned editing</td></tr>
+            <tr><td>Engineering &amp; survey firms</td><td>Civil 3D, GNSS, drone photogrammetry, LiDAR; path to the Missouri PLS license</td></tr>
+            <tr><td>Defense contractors / NGA</td><td>Imagery analysis, remote sensing, clearance eligibility, USGIF GEOINT certificate</td></tr>
+            <tr><td>State &amp; federal agencies</td><td>Hydrology and terrain analysis, transportation networks, Python automation</td></tr>
+          </tbody></table></div>
+        <p class="note" style="margin-top:8px">Useful credentials: GISP, Esri technical certifications, FAA Part 107, USGIF Certified GEOINT Professional, Missouri Professional Land Surveyor.</p>
+      </div>
+    </div>
+
+    <!-- Find jobs -->
+    <div class="at-view" id="at-jobs" hidden>
+      <div><h2>Find open spatial science jobs</h2>
+        <p class="at-lede">Pick roles and an area. Each link opens that job board's live results in a new tab, so you see what is posted today.</p></div>
+      <div class="card" style="display:grid;gap:12px">
+        <div><h3>Roles</h3><div class="at-chips" id="at-roles"></div></div>
+        <div class="at-form">
+          <label for="at-area">Area
+            <select id="at-area">
+              <option value="spfd">Springfield, MO (≈50 mi, covers SW MO)</option>
+              <option value="joplin">Joplin, MO</option>
+              <option value="mo">Missouri statewide</option>
+              <option value="stl">St. Louis, MO</option>
+              <option value="kc">Kansas City, MO</option>
+              <option value="us">Nationwide</option>
+              <option value="remote">Remote</option>
+            </select></label>
+          <label for="at-extra">Extra keyword (optional)
+            <input type="text" id="at-extra" placeholder="e.g. entry level, LiDAR, intern"></label>
+        </div>
+        <p class="note" id="at-echo" style="margin:0"></p>
+        <div class="at-links" id="at-links"></div>
+      </div>
+      <div class="card"><h3>Employer and specialty boards</h3><div class="at-links" id="at-fixed"></div></div>
+      <p class="at-callout"><b>Search tips.</b> Spatial jobs hide under many titles: try "GIS" first, then "geospatial", "cartographic", "remote sensing", "LiDAR" and "survey technician". Check the City of Springfield and USAJobs weekly; government postings often close in two to three weeks.</p>
+    </div>
+
+    <div class="at-sources card" style="margin-top:14px">
+      <b style="color:var(--fg)">Atlas sources</b>
+      <ol>
+        <li><a href="https://www.bls.gov/ooh/architecture-and-engineering/cartographers-and-photogrammetrists.htm">BLS OOH: Cartographers and Photogrammetrists</a> · <a href="https://www.bls.gov/ooh/architecture-and-engineering/surveying-and-mapping-technicians.htm">Surveying and Mapping Technicians</a> · <a href="https://www.bls.gov/ooh/architecture-and-engineering/surveyors.htm">Surveyors</a> · <a href="https://www.bls.gov/ooh/life-physical-and-social-science/geographers.htm">Geographers</a></li>
+        <li><a href="https://www.bls.gov/oes/2023/may/oes_44180.htm">BLS OEWS May 2023: Springfield, MO MSA</a> · <a href="https://www.bls.gov/regions/mountain-plains/news-release/2026/occupationalemploymentandwages_springfieldmo_20260811.htm">Springfield OEWS May 2025 release</a></li>
+        <li>Missouri BLS OEWS May 2025 figures via <a href="https://tradecareerpath.com/trades/cartographer-gis/missouri/">TradeCareerPath</a>, <a href="https://americabynumbers.com/salary/surveying-and-mapping-technicians-salary-in-missouri/">America by Numbers</a> and <a href="https://tradecareerpath.com/programs/online-surveying-degree/missouri/">TradeCareerPath (surveyors)</a></li>
+        <li><a href="https://greaterstlinc.com/wp-content/uploads/2026/08/St-Louis-Geospatial-Overview_2026.pdf">Greater St. Louis Inc.: Geospatial Overview 2026</a> · <a href="https://www.expansionsolutionsmagazine.com/nga-opens-1-7b-next-nga-west-campus-in-st-louis/">NGA West opening</a></li>
+        <li><a href="https://geoawesome.com/geospatial-workforce-ai-skills-spatial-judgment/">Geoawesome (Aug 2026), citing O*NET 2025 postings</a> · <a href="https://www.geoconnexion.com/in-depth/what-employers-are-really-looking-for-in-gis-candidates-in-2026">GeoConnexion: what employers want in 2026</a></li>
+        <li>Local postings: <a href="https://talents.vaia.com/companies/governmentjobs-com/springfield/gis-specialist-112955022/">City of Springfield GIS Specialist</a>, <a href="https://www.ihiretechnology.com/jobs/view/523330575">Senior GIS Specialist</a>, <a href="https://www.careerbuilder.com/job-details/cartographic-analyst-springfield-mo--4c45584a-2d5b-437e-9f2b-ace09f5bfff8">Cartographic Analyst</a></li>
+      </ol>
+      <p style="margin-top:6px">BLS wage data exclude the self-employed. GIS analysts have no BLS occupation of their own, so cartographers &amp; photogrammetrists are used as the closest proxy.</p>
+    </div>
+  </div>
+
   <p class="foot credit">Designed by <b>Prof. Xin (Shane) Miao</b>, Missouri State University · <a href="https://github.com/ShaneM73/job-market-map">GitHub</a></p>
 </div>
 
@@ -384,6 +642,95 @@
     s2.append('text').attr('x', m2.left).attr('y', 11).attr('font-size', 10).attr('fill', muted).text('Log scale · blue: US jobs (BLS OOH, 2025) · green: credentials awarded per year');
   }
   function showTip(tip, box, x, y, html) { tip.innerHTML = html; tip.style.display = 'block'; const r = box.getBoundingClientRect(); const w = tip.offsetWidth, h = tip.offsetHeight; let left = x + 12, top = y + 12; if (left + w > r.width) left = Math.max(0, x - w - 12); if (top + h > r.height) top = Math.max(0, y - h - 12); tip.style.left = left + 'px'; tip.style.top = top + 'px'; }
+})();
+</script>
+<script>
+/* Missouri & Springfield atlas tab + top-level tab switching (independent of the map script). */
+(function () {
+  const $ = id => document.getElementById(id);
+  const money = n => '$' + n.toLocaleString('en-US');
+
+  function bars(el, rows, max, pct) {
+    el.innerHTML = rows.map(r => `<div class="at-bar"><span>${r.n}</span><div class="at-row"><div class="at-track"><div class="at-fill${r.hl ? ' hl' : ''}" style="width:${Math.max(2, r.v / max * 100)}%"></div></div><span class="at-val">${pct ? r.v + '%' : money(r.v)}</span></div></div>`).join('');
+  }
+  function grouped(el, rows, max, colors) {
+    el.innerHTML = rows.map(r => `<div class="at-bar"><span>${r.n}</span><div class="at-stack">${r.vals.map((v, i) => v == null
+      ? `<div class="at-row"><span class="at-val na">not published</span><span></span></div>`
+      : `<div class="at-row"><div class="at-track"><div class="at-fill" style="width:${v / max * 100}%;background:${colors[i]}"></div></div><span class="at-val">${money(v)}</span></div>`).join('')}</div></div>`).join('');
+  }
+  bars($('at-rel'), [{ n: 'Geographers', v: 102040 }, { n: 'Civil engineers', v: 100840 }, { n: 'Urban & regional planners', v: 89320 }, { n: 'Environmental scientists', v: 82220 }, { n: 'Cartographers / GIS', v: 81390, hl: true }, { n: 'Landscape architects', v: 79870 }, { n: 'Surveyors', v: 75440 }, { n: 'Mapping technicians', v: 54240 }], 110000);
+  bars($('at-ind'), [{ n: 'Local government', v: 41 }, { n: 'Architecture & engineering', v: 22 }, { n: 'Utilities', v: 6 }, { n: 'Consulting', v: 5 }, { n: 'Federal government', v: 4 }], 50, true);
+  bars($('at-payind'), [{ n: 'Federal government', v: 109300 }, { n: 'Utilities', v: 96820 }, { n: 'Local government', v: 82200 }, { n: 'Architecture & engineering', v: 81080 }, { n: 'Consulting', v: 79030 }], 120000);
+  grouped($('at-mo'), [{ n: 'Cartographers / GIS', vals: [81390, 76950] }, { n: 'Surveyors', vals: [75440, 62110] }, { n: 'Mapping technicians', vals: [54240, 51700] }], 90000, ['var(--accent)', 'var(--ok)']);
+  grouped($('at-three'), [{ n: 'Cartographers / GIS', vals: [81390, 76950, null] }, { n: 'Surveyors', vals: [75440, 62110, 59780] }, { n: 'Mapping technicians', vals: [54240, 51700, 49630] }], 90000, ['var(--accent)', 'var(--ok)', 'var(--muted)']);
+  bars($('at-skillbars'), [{ n: 'ArcGIS', v: 75 }, { n: 'Python', v: 34 }, { n: 'SQL', v: 22 }, { n: 'JavaScript', v: 13 }], 100, true);
+
+  /* job search launcher */
+  const ROLES = ['GIS Analyst', 'GIS Technician', 'GIS Specialist', 'Geospatial', 'Cartographer', 'Remote Sensing', 'Survey Technician', 'Surveyor', 'LiDAR', 'Photogrammetry', 'Geospatial Developer', 'Imagery Analyst'];
+  let picked = new Set(['GIS Analyst', 'GIS Technician', 'GIS Specialist']);
+  try { const s = JSON.parse(localStorage.getItem('atlas-roles') || 'null'); if (Array.isArray(s) && s.length) picked = new Set(s); } catch (e) {}
+  const chips = $('at-roles');
+  chips.innerHTML = ROLES.map(r => `<button type="button" class="at-chip" aria-pressed="${picked.has(r)}">${r}</button>`).join('');
+  chips.addEventListener('click', e => {
+    const b = e.target.closest('.at-chip'); if (!b) return; const r = b.textContent;
+    if (picked.has(r)) { if (picked.size > 1) picked.delete(r); } else picked.add(r);
+    chips.querySelectorAll('.at-chip').forEach(c => c.setAttribute('aria-pressed', picked.has(c.textContent)));
+    try { localStorage.setItem('atlas-roles', JSON.stringify([...picked])); } catch (e) {}
+    build();
+  });
+  const AREAS = {
+    spfd: { loc: 'Springfield, MO', li: 'Springfield, Missouri, United States', usa: 'Springfield, Missouri', r: 50 },
+    joplin: { loc: 'Joplin, MO', li: 'Joplin, Missouri, United States', usa: 'Joplin, Missouri', r: 50 },
+    mo: { loc: 'Missouri', li: 'Missouri, United States', usa: 'Missouri' },
+    stl: { loc: 'St. Louis, MO', li: 'St Louis, Missouri, United States', usa: 'St. Louis, Missouri', r: 25 },
+    kc: { loc: 'Kansas City, MO', li: 'Kansas City, Missouri, United States', usa: 'Kansas City, Missouri', r: 25 },
+    us: { loc: '', li: 'United States', usa: '' },
+    remote: { loc: 'Remote', li: 'United States', usa: '', remote: true }
+  };
+  const enc = encodeURIComponent;
+  const card = l => `<a href="${l.u}" target="_blank" rel="noopener"><b>${l.b} ↗</b><span>${l.d}</span></a>`;
+  function build() {
+    const a = AREAS[$('at-area').value], extra = $('at-extra').value.trim(), list = [...picked];
+    const ors = list.map(r => `"${r}"`).join(' OR ');
+    const q = (list.length > 1 ? '(' + ors + ')' : ors) + (extra ? ' ' + extra : '');
+    const simple = list[0] + (extra ? ' ' + extra : '');
+    $('at-echo').textContent = 'Search: ' + q + ' · ' + (a.loc || 'nationwide');
+    $('at-links').innerHTML = [
+      { b: 'Indeed', d: 'Largest general board; supports OR searches', u: `https://www.indeed.com/jobs?q=${enc(q)}&l=${enc(a.loc)}${a.r ? '&radius=' + a.r : ''}` },
+      { b: 'LinkedIn Jobs', d: 'Engineering firms and contractors', u: `https://www.linkedin.com/jobs/search/?keywords=${enc(q)}&location=${enc(a.li)}${a.remote ? '&f_WT=2' : ''}${a.r ? '&distance=' + a.r : ''}` },
+      { b: 'USAJobs', d: 'Federal: USGS, NGA, Army Corps, USDA', u: `https://www.usajobs.gov/search/results/?k=${enc(simple)}${a.usa ? '&l=' + enc(a.usa) : ''}` },
+      { b: 'GovernmentJobs', d: 'City, county and state agencies', u: `https://www.governmentjobs.com/jobs?keyword=${enc(simple)}${a.loc && !a.remote ? '&location=' + enc(a.loc) : ''}` },
+      { b: 'ZipRecruiter', d: 'Aggregates many smaller sites', u: `https://www.ziprecruiter.com/jobs-search?search=${enc(simple)}&location=${enc(a.remote ? 'Remote' : a.loc || 'United States')}` },
+      { b: 'Google Jobs', d: 'Listings from across the web', u: `https://www.google.com/search?q=${enc(q + ' jobs ' + (a.loc || ''))}&ibp=htl;jobs` }
+    ].map(card).join('');
+  }
+  $('at-area').addEventListener('change', build); $('at-extra').addEventListener('input', build); build();
+  $('at-fixed').innerHTML = [
+    { b: 'City of Springfield', d: 'City jobs including GIS', u: 'https://www.governmentjobs.com/careers/springfieldmo' },
+    { b: 'MoCareers', d: 'State of Missouri (MoDOT, DNR, MDC)', u: 'https://mocareers.mo.gov/' },
+    { b: 'NGA careers', d: 'Federal GEOINT jobs, St. Louis', u: 'https://www.intelligencecareers.gov/nga' },
+    { b: 'GISjobs.com', d: 'GIS-only job board', u: 'https://www.gisjobs.com/' },
+    { b: 'Esri careers', d: 'GIS software company', u: 'https://www.esri.com/en-us/about/careers/overview' }
+  ].map(card).join('');
+
+  /* routing: #atlas-tab or #atlas-<view> shows the atlas tab; anything else shows the map */
+  const VIEWS = ['national', 'missouri', 'local', 'skills', 'jobs'];
+  let lastAtlas = 'national';
+  function route() {
+    const h = location.hash.slice(1);
+    const inAtlas = h === 'atlas' || h.startsWith('atlas-');
+    $('tab-map').hidden = inAtlas; $('atlas-tab').hidden = !inAtlas;
+    document.querySelectorAll('.apptabs a').forEach(a => a.classList.toggle('on', (a.dataset.tab === 'atlas') === inAtlas));
+    if (inAtlas) {
+      const v = h.slice(6); if (VIEWS.includes(v)) lastAtlas = v;
+      VIEWS.forEach(x => { $('at-' + x).hidden = x !== lastAtlas; });
+      document.querySelectorAll('#atlas-tab .at-sub a').forEach(a => a.classList.toggle('on', a.dataset.v === lastAtlas));
+    } else {
+      window.dispatchEvent(new Event('resize')); /* map was sized while hidden */
+      if (h) { const t = document.getElementById(h); if (t) t.scrollIntoView(); }
+    }
+  }
+  window.addEventListener('hashchange', route); route();
 })();
 </script>
 </body>
